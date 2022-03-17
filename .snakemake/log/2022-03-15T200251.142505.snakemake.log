@@ -1,0 +1,4 @@
+Building DAG of jobs...
+WorkflowError:
+Failed to open source file /juno/work/iacobuzc/haochen/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/rules/envs/var-calling.yaml
+FileNotFoundError: [Errno 2] No such file or directory: '/juno/work/iacobuzc/haochen/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/rules/envs/var-calling.yaml'

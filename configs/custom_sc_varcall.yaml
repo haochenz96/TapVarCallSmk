@@ -1,0 +1,35 @@
+# input variables for running the custom SCVarCall pipeline
+
+top_dir: /home/zhangh5/work/Tapestri_batch1/pipeline_results_mutect2
+scripts_dir: /home/zhangh5/work/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/scripts
+# ----- sample info -----
+sample_info:
+    cohort_name: normal_pancreas
+    sample_name: RSX194
+# combined_cells.bam: /home/zhangh5/work/Tapestri_batch1/pipeline_results_Mutect2/autopsy/RA17_22-39_2_fresh_hg19-b37/tap_pipeline_output/results/bam/RA17_22-39_2_fresh_hg19-b37.tube1.cells.bam
+
+# ----- reference files -----
+reference_info:
+    reference_genome: /home/zhangh5/work/commons/Tapestri_ref/hg19-b37/hg19-b37.fasta
+    genome_version: hg19-b37
+    panel_amplicon_file: /home/zhangh5/work/Tapestri_batch1/panel_1440/panel_1440_hg19-b37/1440.amplicons.bed
+    panel_version: iacobuzio1440
+
+
+# ----- tool parameters -----
+
+mutect2:
+    # note, all supplementary database VCF files must be indexed, with .idx prefix
+    germline_resource: /home/zhangh5/work/commons/Broad-somatic-b37/af-only-gnomad.raw.sites.b37.vcf.gz
+    mrpas: 0
+    filterm2_ops:
+        min-allele-fraction: 0.2
+        unique-alt-read-count: 2
+
+bcftools:
+    # note the single quotation mark and the double quotation mark are seemingly not interchangeable, based on bcftools' doc
+    filters: ['FILTER!~"base_qual"', 'FILTER!~"low_allele_frac"', 'FILTER!~"weak_evidence"', 'FILTER!~"slippage"', 'FILTER!~"multiallelic"', 'FILTER!~"clustered_events"', 'FMT/DP>4', 'AF>0.2']
+
+# mutect2_f:
+#     # mutect2 force calling
+

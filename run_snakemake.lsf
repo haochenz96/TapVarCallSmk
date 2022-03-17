@@ -1,0 +1,15 @@
+#!/bin/bash 
+#BSUB -J snakemake
+#BSUB -sla CMOMEM -R highmem                                                  
+#BSUB -n 2                # number of core(tasks) for parallel jobs          
+#BSUB -R rusage[mem=8]    # expected resorce consumption for memory
+#BSUB -W 24:00            # run time limit (hours)
+#BSUB -o /home/zhangh5/work/Tapestri_batch1/tap_custom_SNAKEMAKE/snakemake.stdout
+#BSUB -eo /home/zhangh5/work/Tapestri_batch1/tap_custom_SNAKEMAKE/snakemake.stderr
+
+if [ -f ~/.bashrc ] ; then
+    . ~/.bashrc
+fi
+
+conda activate snakemake 
+snakemake --profile lsf

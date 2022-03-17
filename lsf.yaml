@@ -1,0 +1,7 @@
+__default__:
+  - "-P sm-tutorial"
+  - "-W 1:05"
+
+bwa_map:
+  - "-P sm-tutorial"
+  - ""
