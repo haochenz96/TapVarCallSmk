@@ -1,0 +1,3 @@
+SyntaxError in line 54 of /juno/work/iacobuzc/haochen/Tapestri_project/tap_custom_SNAKEMAKE/workflow/rules/2-single-cell_mutect2_call.smk:
+invalid syntax
+  File "/juno/work/iacobuzc/haochen/Tapestri_project/tap_custom_SNAKEMAKE/workflow/Snakefile", line 20, in <module>

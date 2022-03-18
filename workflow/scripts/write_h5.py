@@ -1,9 +1,28 @@
 from missionbio.h5.create import create_cnv_assay, create_dna_assay
 from missionbio.h5.data import H5Writer
-
 import missionbio.mosaic.io as mio
 import missionbio.mosaic.utils
 import pandas as pd
+import click
+import json
+
+###############################
+# part 0 ----- parse inputs
+###############################
+
+# @click.option('--sample_name', required=True, type=str)
+# @click.option('--metadata', required=True, type=str)
+# @click.option('--all_cell_vcf', required=True, type=str)
+# @click.option('--amplicon_file', required=True, type=str)
+# @click.option('--read_count_tsv', required=True, type=str)
+
+# metadata = json.loads(metadata)
+
+sample_name = snakemake.config['sample_name']
+metadata = snakemake.params.metadata_json
+all_cell_vcf = snakemake.input.merged_f_vcf
+amplicon_file = snakemake.config['reference_info']['panel_amplicon_file']
+read_count_tsv = snakemake.
 
 ###############################
 # part 1 ----- create DNA assay
@@ -11,12 +30,7 @@ import pandas as pd
 
 vcf_file = 
 
-metadata = {
-    'sample_name': sample_name,
-    'panel_name': 'iacobuzc1440'
-}
-
-dna = create_dna_assay(str(vcf_file), metadata)
+dna = create_dna_assay(all_cell_vcf, metadata)
 
 ###############################
 # part 2 ----- create CNV assay
@@ -38,11 +52,7 @@ def add_amplicon_metadata(cnv_assay, amplicons):
     cnv_assay.add_col_attr('start_pos', start_pos)
     cnv_assay.add_col_attr('end_pos', end_pos)
 
-# read in read count and create CNV assay
-amplicons_file = '/Users/haochen/Desktop/Tapestri_analysis/Tapestri_data_batch1/panel/1440/1440.amplicons' # <----
-read_counts_file = data_dir / 'RSX381_hg19-b37.tube1.barcode.cell.distribution.tsv' # <----
-
-cnv = create_cnv_assay(read_counts_file, metadata)
+cnv = create_cnv_assay(read_counts_tsv, metadata)
 
 amplicons = pd.read_csv(
             amplicons_file,

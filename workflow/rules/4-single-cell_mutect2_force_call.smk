@@ -6,9 +6,12 @@ rule mutect2_sc_f_pass2:
     output: 
     	#vcf="$outpath/mutect2/__m2_sc_vcfs/${sample_name}_${cell_name}_somatic_m2.vcf.gz"
         sc_vcf = "mutect2_sc_f_pass2/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz",
+        stats = "mutect2_sc_pass2/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz.stats",
+        sc_vcf_filter_added = "mutect2_sc_pass2/m2_sc_vcfs_filter_added/{sample_name}_{cell_barcode}_somatic_m2_filter_added.vcf.gz",
     params:
         REF = config['reference_info']['reference_genome'],
-        mrpas = config['mutect2']['mrpas']
+        mrpas = config['mutect2']['mrpas'],
+        FILTERM2_OPS = parse_for_shell_args(config['mutect2']['filterm2_ops']),
     threads: lambda wildcards, attempt: attempt * 2
     resources: 
         mem_mb = lambda wildcards, attempt: attempt * 8000,
@@ -25,4 +28,9 @@ rule mutect2_sc_f_pass2:
         "--max-reads-per-alignment-start {params.mrpas} "
         "-R {params.REF} "
         "-I {input.sc_bam} "
-        "-O {output.sc_vcf} "
+        "-O {output.sc_vcf}; "
+        "gatk FilterMutectCalls "
+        "-R {params.REF} "
+        "-V {output.sc_vcf} "
+        "-O {output.sc_vcf_filter_added} "
+        "{params.FILTERM2_OPS} "

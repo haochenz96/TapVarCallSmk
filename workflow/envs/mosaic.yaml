@@ -1,0 +1,6 @@
+channels:
+  - missionbio
+  - plotly
+  - conda-forge
+dependencies:
+  - missionbio.mosaic>=1.6.1

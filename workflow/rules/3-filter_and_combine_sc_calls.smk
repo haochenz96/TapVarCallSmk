@@ -1,4 +1,4 @@
-rule bcftools_filter_sc_m2_calls:
+rule bcftools_pass_1_filter_sc_m2_calls:
     # for each single cell VCF, hard filter (v3) and index
     input:
         expand("mutect2_sc_pass1/m2_sc_vcfs_filter_added/{sample_name}_{cell_barcode}_somatic_m2_filter_added.vcf.gz", cell_barcode = bars, sample_name = sample_name),
@@ -6,7 +6,7 @@ rule bcftools_filter_sc_m2_calls:
         expand("bcf_pass1/filtered_vcfs/{sample_name}_{cell_barcode}_hard_filtered.vcf.gz", cell_barcode = bars, sample_name = sample_name),
         expand("bcf_pass1/filtered_vcfs/{sample_name}_{cell_barcode}_hard_filtered.vcf.gz.tbi", cell_barcode = bars, sample_name = sample_name),
     params:
-        bcf_filters = parse_bcf_filters(config['bcftools']['filters']),
+        bcf_filters = parse_bcf_filters(config['bcftools']['pass1_filters']),
         bcf_outpath = "bcf_pass1/filtered_vcfs"
     log:
         "logs/bcftools/filter_sc_m2_calls.log"
@@ -33,7 +33,7 @@ rule bcftools_filter_sc_m2_calls:
         done
         """
     
-rule bcftools_merge_filtered_m2_calls:
+rule bcftools_pass1_merge_filtered_m2_calls:
     # merge filtered single cell VCFs; filter again based on mutational prevalence across all cells; create statistics.
     input:
         filtered_sc_vcfs = expand("bcf_pass1/filtered_vcfs/{sample_name}_{cell_barcode}_hard_filtered.vcf.gz", cell_barcode = bars, sample_name = sample_name),
