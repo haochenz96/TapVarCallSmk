@@ -1,4 +1,0 @@
-Building DAG of jobs...
-MissingInputException in line 12 of /juno/work/iacobuzc/haochen/Tapestri_project/tap_custom_SNAKEMAKE/workflow/Snakefile:
-Missing input files for rule all:
-bcf_pass2/combined_vcf/RSX194-combined_f_VCF.vcf.gz

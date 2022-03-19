@@ -5,7 +5,7 @@ scripts_dir: /home/zhangh5/work/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/sc
 # ----- sample info -----
 sample_info:
     cohort_name: Caitlin
-    sample_name: M04-3
+    sample_name: M07-3
 # combined_cells.bam: /home/zhangh5/work/Tapestri_batch1/pipeline_results_Mutect2/autopsy/RA17_22-39_2_fresh_hg19-b37/tap_pipeline_output/results/bam/RA17_22-39_2_fresh_hg19-b37.tube1.cells.bam
 
 # ----- reference files -----

@@ -1,3 +1,0 @@
-SyntaxError in line 41 of /juno/work/iacobuzc/haochen/Tapestri_project/tap_custom_SNAKEMAKE/workflow/rules/5-generate_outputs.smk:
-invalid syntax
-  File "/juno/work/iacobuzc/haochen/Tapestri_project/tap_custom_SNAKEMAKE/workflow/Snakefile", line 23, in <module>

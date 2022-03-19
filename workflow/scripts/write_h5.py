@@ -1,10 +1,14 @@
 from missionbio.h5.create import create_cnv_assay, create_dna_assay
 from missionbio.h5.data import H5Writer
+from missionbio.h5.constants import BARCODE, CHROM, ID, POS
 import missionbio.mosaic.io as mio
 import missionbio.mosaic.utils
+import allel
 import pandas as pd
+import numpy as np
 import click
 import json
+import os
 
 ###############################
 # part 0 ----- parse inputs
@@ -15,20 +19,34 @@ import json
 # @click.option('--all_cell_vcf', required=True, type=str)
 # @click.option('--amplicon_file', required=True, type=str)
 # @click.option('--read_count_tsv', required=True, type=str)
+# @click.option('--output_dir', required=True, type=str)
 
 # metadata = json.loads(metadata)
 
-sample_name = snakemake.config['sample_name']
-metadata = snakemake.params.metadata_json
-all_cell_vcf = snakemake.input.merged_f_vcf
-amplicon_file = snakemake.config['reference_info']['panel_amplicon_file']
-read_count_tsv = snakemake.
+# get variables from snakemake
+sample_name = snakemake.config['sample_info']['sample_name']
+
+#metadata = snakemake.params.metadata_json
+metadata = json.loads(snakemake.params.metadata_json)
+for i in metadata:
+    if isinstance(metadata[i], dict):
+        metadata[i] = json.dumps(metadata[i])
+print(metadata)
+
+all_cell_vcf = snakemake.input.merged_prev_filtered_vcf[0]
+amplicons_file = snakemake.config['reference_info']['panel_amplicon_file']
+read_counts_tsv = snakemake.input.read_counts_tsv[0]
+output_h5 = snakemake.output.output_h5[0]
+
+output_dir = output_h5.split('/')[0]
+try:
+    os.mkdir(output_dir)
+except OSError as error:
+    print(f'[WARNING] ----- {error}')    
 
 ###############################
 # part 1 ----- create DNA assay
 ###############################
-
-vcf_file = 
 
 dna = create_dna_assay(all_cell_vcf, metadata)
 
@@ -68,9 +86,8 @@ add_amplicon_metadata(cnv, amplicons)
 ###############################
 
 assays = [dna, cnv]
-output_h5 = wd / f'{sample_name}_m2_f.dna.h5'
 
-!rm $output_h5
+# !rm $output_h5
 with H5Writer(output_h5) as writer:
     for assay in assays:
         writer.write(assay)

@@ -1,3 +1,0 @@
-SyntaxError in line 10 of /juno/work/iacobuzc/haochen/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/rules/3-filter_and_combine_sc_calls.smk:
-invalid syntax
-  File "/juno/work/iacobuzc/haochen/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/Snakefile", line 19, in <module>

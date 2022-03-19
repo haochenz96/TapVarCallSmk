@@ -1,3 +1,0 @@
-IndexError in line 15 of /juno/work/iacobuzc/haochen/Tapestri_project/tap_custom_SNAKEMAKE/workflow/Snakefile:
-tuple index out of range
-  File "/juno/work/iacobuzc/haochen/Tapestri_project/tap_custom_SNAKEMAKE/workflow/Snakefile", line 15, in <module>

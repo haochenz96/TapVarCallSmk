@@ -43,7 +43,7 @@ rule bcftools_pass2_merge_m2_sc_f_calls:
         merged_prev_filtered_vcf_stats = expand("bcf_pass2/combined_vcf/{sample_name}-combined_VCF_AF_DP_filters.prev_filtered.vcf.gz.stats", sample_name = sample_name),
     conda:
         "../envs/bcftools.yaml"
-    threads: 8
+    threads: lambda wildcards, attempt: attempt * 2
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 2000,
         time_min = 59
@@ -59,28 +59,3 @@ rule bcftools_pass2_merge_m2_sc_f_calls:
 
         bcftools stats {output.merged_prev_filtered_vcf} > {output.merged_prev_filtered_vcf_stats}
         """
-
-# rule write_h5:
-#     # merge force-called single-cell VCFs; index; generate statistics.
-#     input:
-#         merged_f_vcf = expand("bcf_pass2/combined_vcf/{sample_name}-combined_f_VCF.vcf.gz", sample_name = sample_name),
-#         read_counts_tsv = expand("tap_pipeline_output")
-#     output:
-#         output_h5 = expand("OUTPUTS/{sample_name}_DNA_CNV.h5", sample_name = sample_name)
-#     params:
-#         metadata = {
-#             'sample_name': sample_name,
-#             'genome_version': config['genome_version'],
-#             'panel_version': config['panel_version'],
-#             'filterm2_ops': config['mutect2']['filterm2_ops'],
-#             'bcftools_filters': config['bcftools']['filters']
-#         },
-#         metadata_json = json.dumps(metatdata)
-#     conda:
-#         "../envs/mosaic.yaml"
-#     threads: 4
-#     resources:
-#         mem_mb = lambda wildcards, attempt: attempt * 2000,
-#         time_min = 59
-#     script:
-#         "../scripts/write_h5.py"
