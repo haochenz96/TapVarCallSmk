@@ -9,9 +9,12 @@ rule split_sc_bams:
         sc_bams_dir = "sc_bams",
         sample_name = sample_name,
         script = scripts_dir / 'split_cellbam.sh'
-    threads: 8
-    resources:
-        mem_mb=1000
+    conda:
+        "../envs/samtools.yaml"
+    threads: lambda wildcards, attempt: attempt * 2,
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * 8000,
+        time_min = lambda wildcards, attempt: attempt * 59,
     shell:
         "mkdir -p {params.sc_bams_dir}; "
         "cd {params.sc_bams_dir}; "
@@ -52,13 +55,14 @@ rule mutect2_sc_pass1:
         GR = config['mutect2']['germline_resource'], # use germline resource as prior prob that normal sample carries an allele
         mrpas = config['mutect2']['mrpas'],
         FILTERM2_OPS = parse_for_shell_args(config['mutect2']['filterm2_ops'])
+    threads: lambda wildcards, attempt: attempt * 2,
     resources: 
-        mem_mb = lambda wildcards, attempt: attempt * 4000,
-        time_min = 59
+        mem_mb = lambda wildcards, attempt: attempt * 8000,
+        time_min = lambda wildcards, attempt: attempt * 59,
     conda:
         "../envs/var-calling.yaml"
     shell:
-    	"sc_bai='{input.sc_bam}.bai'; "
+    	"sc_bai={input.sc_bam}.bai; "
     	"if ! [ -f '$sc_bai' ]; then samtools index {input.sc_bam}; fi; "
         "gatk Mutect2 "
         "--max-reads-per-alignment-start {params.mrpas} "

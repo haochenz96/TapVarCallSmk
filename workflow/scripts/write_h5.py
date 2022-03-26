@@ -33,7 +33,7 @@ for i in metadata:
         metadata[i] = json.dumps(metadata[i])
 print(metadata)
 
-all_cell_vcf = snakemake.input.merged_prev_filtered_vcf[0]
+all_cell_vcf = snakemake.input.output_vcf[0]
 amplicons_file = snakemake.config['reference_info']['panel_amplicon_file']
 read_counts_tsv = snakemake.input.read_counts_tsv[0]
 output_h5 = snakemake.output.output_h5[0]

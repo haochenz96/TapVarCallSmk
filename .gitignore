@@ -1,4 +1,6 @@
 .snakemake
 *.svg
 *.log
+*.stderr
+*.stdout
 __pycache__

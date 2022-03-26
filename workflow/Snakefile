@@ -10,6 +10,9 @@ import json
 
 workdir: working_dir # <----- working directory is specified by prep_inputs.py
 #print(f'working directory ---- {working_dir}')
+
+report: "report/workflow.rst" # <----- write report
+
 rule all:
     input:
         # ---- step-2 output:
@@ -19,12 +22,12 @@ rule all:
         # ---- step-4 output:
         # expand("mutect2_sc_f_pass2/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz", cell_barcode = bars, sample_name = sample_name),
         # ---- step-5_output:
-        #merged_prev_filtered_vcf = expand("bcf_pass2/combined_vcf/{sample_name}-combined_VCF_AF_DP_filters.prev_filtered.vcf.gz", sample_name = sample_name),
+        # expand("bcf_pass2/combined_vcf/{sample_name}-combined_VCF_DP_AF_filters.prev_filtered.vcf.gz", sample_name = sample_name),
         # ---- step-6 output:
         expand("OUTPUTS/{sample_name}_DNA_CNV.h5", sample_name = sample_name)
 
-# include: "rules/2-single-cell_mutect2_call.smk"
-# include: "rules/3-bcf_filter_and_combine_pass1.smk"
-# include: "rules/4-single-cell_mutect2_force_call.smk"
-#include: "rules/5-bcf_filter_and_combine_pass2.smk"
+include: "rules/2-single-cell_mutect2_call.smk"
+include: "rules/3-bcf_filter_and_combine_pass1.smk"
+include: "rules/4-single-cell_mutect2_force_call.smk"
+include: "rules/5-bcf_filter_and_combine_pass2.smk"
 include: "rules/6-generate_outputs.smk"

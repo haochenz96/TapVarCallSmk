@@ -1,7 +1,9 @@
 rule write_h5:
     # merge force-called single-cell VCFs; index; generate statistics.
     input:
-        merged_prev_filtered_vcf = expand("bcf_pass2/combined_vcf/{sample_name}-combined_VCF_DP_AF_filters.prev_filtered.vcf.gz", sample_name = sample_name),
+        output_vcf = expand("bcf_pass2/{sample_name}-f_q_intersected.vcf.gz", sample_name = sample_name),
+        # ensure that the merging step finishes
+        output_vcf_stats = expand("bcf_pass2/{sample_name}-f_q_intersected.vcf.gz.stats", sample_name = sample_name),
         read_counts_tsv = expand("tap_pipeline_output/results/tsv/{sample_name}_{genome_version}.tube1.barcode.cell.distribution.tsv", sample_name = sample_name, genome_version = genome_version)
     output:
         output_h5 = expand("OUTPUTS/{sample_name}_DNA_CNV.h5", sample_name = sample_name)
