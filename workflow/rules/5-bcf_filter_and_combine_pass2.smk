@@ -1,72 +1,56 @@
-rule bcftools_pass2_normalize_sc_f_m2_calls:
-    # for each single cell VCF, apply only DP filter; then split multiallelic sites and normalize so that they can be merged in the next step
+rule bcftools_pass_2_filter_merge_sc_m2_calls:
+    # scatter by sample
+    # (1) for each single cell VCF, split multiallelic sites, apply only DP filter and index; 
+    # (2) merge filtered single cell VCFs; no filter based on mutational prevalence across all cells; create statistics.
     input:
-        expand("mutect2_sc_f_pass2/m2_sc_vcfs_filter_added/{sample_name}_{cell_barcode}_somatic_m2_filter_added.vcf.gz", sample_name = sample_name, cell_barcode = bars),
+        sc_f_vcfs_filter_added = get_step4_m2_f_vcfs,
     output:
-        expand("bcf_pass2/filtered_vcfs/{sample_name}_{cell_barcode}_filtered.vcf.gz", cell_barcode = bars, sample_name = sample_name),
-        expand("bcf_pass2/filtered_vcfs/{sample_name}_{cell_barcode}_filtered.vcf.gz.tbi", cell_barcode = bars, sample_name = sample_name),
+        merged_f_vcf = "{sample_name}/bcf_pass2/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz",
+        merged_f_vcf_stats = "{sample_name}/bcf_pass2/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz.stats",
     params:
-        bcf_filters = parse_bcf_filters(config['bcftools']['pass2_filters']),
-        bcf_outpath = "bcf_pass2/filtered_vcfs"
-    log:
-        "logs/bcftools_pass2/filter_sc_f_m2_calls.log"
+        sc_vcf_filters = parse_bcf_filters(config['bcftools']['pass2_sc_vcf_filters']),
     conda:
         "../envs/bcftools.yaml"
-    threads: 4
+    threads: lambda wildcards, attempt: attempt * 4,
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 2000,
-        time_min = 59
+        time_min = lambda wildcards, attempt: attempt * 119,
     shell:
         """
-        for m2_vcf in {input}; do 
+        mkdir -p {wildcards.sample_name}/bcf_pass1/filtered_vcfs
+        for m2_vcf in {input.sc_f_vcfs_filter_added}; do 
             
-            out_name=$(basename $m2_vcf)
-            echo 'processing ${{out_name}}'
+            out_name=$(basename ${{m2_vcf}})
             
-            bcftools norm -m- $m2_vcf | \
-            bcftools filter -i '{params.bcf_filters}' | \
+            
+            bcftools norm -m- ${{m2_vcf}} | \
+            bcftools filter -i '{params.sc_vcf_filters}' | \
             bgzip -c > \
-            {params.bcf_outpath}/${{out_name/somatic_m2_filter_added.vcf.gz/filtered.vcf.gz}}
+            {wildcards.sample_name}/bcf_pass1/filtered_vcfs/${{out_name/somatic_m2_filter_added.vcf.gz/hard_filtered.vcf.gz}}
 
-            tabix {params.bcf_outpath}/${{out_name/somatic_m2_filter_added.vcf.gz/filtered.vcf.gz}}
-
+            tabix {wildcards.sample_name}/bcf_pass1/filtered_vcfs/${{out_name/somatic_m2_filter_added.vcf.gz/hard_filtered.vcf.gz}}
+            echo cell -- ${{out_name}} -- norm, filter, zip, index done
         done
-        """
 
-rule bcftools_pass2_merge_m2_sc_f_calls:
-    # merge force-called single-cell VCFs; index; generate statistics.
-    input:
-        filtered_sc_f_vcfs = expand("bcf_pass2/filtered_vcfs/{sample_name}_{cell_barcode}_filtered.vcf.gz", cell_barcode = bars, sample_name = sample_name),
-        filtered_sc_f_vcfs_index = expand("bcf_pass2/filtered_vcfs/{sample_name}_{cell_barcode}_filtered.vcf.gz.tbi", cell_barcode = bars, sample_name = sample_name),
-    output:
-        merged_filtered_vcf = expand("bcf_pass2/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz", sample_name = sample_name),
-        merged_filtered_vcf_stats = expand("bcf_pass2/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz.stats", sample_name = sample_name),
-    conda:
-        "../envs/bcftools.yaml"
-    threads: lambda wildcards, attempt: attempt * 2
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * 2000,
-        time_min = 59
-    shell:
-        """
-        bcftools merge --merge none {input.filtered_sc_f_vcfs} | \
+        bcftools merge --merge none $(find {wildcards.sample_name}/bcf_pass1/filtered_vcfs -name '*hard_filtered.vcf.gz') | \
         bcftools sort | \
         bgzip -c > \
-        {output.merged_filtered_vcf}
+        {output.merged_f_vcf}
 
-        tabix {output.merged_filtered_vcf}
+        tabix {output.merged_f_vcf}
 
-        bcftools stats {output.merged_filtered_vcf} > {output.merged_filtered_vcf_stats}
+        bcftools stats {output.merged_f_vcf} > {output.merged_f_vcf_stats}
         """
 
 rule bcftools_pass2_intersect_f_q_vcfs:
     # intersect q_vcf and f_vcf
+    # all samples together
     input:
-        f_vcf = expand("bcf_pass2/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz", sample_name = sample_name),
-        q_vcf = expand("bcf_pass1/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz", sample_name = sample_name),
+        f_vcf = "{sample_name}/bcf_pass2/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz",
+        q_vcf = "{sample_name}/bcf_pass1/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz",
     output:
-        output_vcf = expand("bcf_pass2/{sample_name}-f_q_intersected.vcf.gz", sample_name = sample_name),
-        output_vcf_stats = expand("bcf_pass2/{sample_name}-f_q_intersected.vcf.gz.stats", sample_name = sample_name),
+        output_vcf = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz",
+        output_vcf_stats = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz.stats",
     conda:
         "../envs/bcftools.yaml"
     threads: lambda wildcards, attempt: attempt * 2

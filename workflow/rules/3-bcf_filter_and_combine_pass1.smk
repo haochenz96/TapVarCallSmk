@@ -1,57 +1,43 @@
-rule bcftools_pass_1_filter_sc_m2_calls:
-    # for each single cell VCF, hard filter (v3) and index
+rule bcftools_pass_1_filter_merge_sc_m2_calls:
+    # scatter by sample
+    # (1) for each single cell VCF, split multiallelic sites, hard filter (v3) and index; 
+    # (2) merge filtered single cell VCFs; filter again based on mutational prevalence across all cells; create statistics.
     input:
-        expand("mutect2_sc_pass1/m2_sc_vcfs_filter_added/{sample_name}_{cell_barcode}_somatic_m2_filter_added.vcf.gz", cell_barcode = bars, sample_name = sample_name),
+        sc_vcfs_filter_added = get_step2_m2_vcfs,
     output:
-        expand("bcf_pass1/filtered_vcfs/{sample_name}_{cell_barcode}_hard_filtered.vcf.gz", cell_barcode = bars, sample_name = sample_name),
-        expand("bcf_pass1/filtered_vcfs/{sample_name}_{cell_barcode}_hard_filtered.vcf.gz.tbi", cell_barcode = bars, sample_name = sample_name),
+        merged_prev_filtered_vcf = "{sample_name}/bcf_pass1/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz",
+        merged_prev_filtered_vcf_stats = "{sample_name}/bcf_pass1/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz.stats",
     params:
-        bcf_filters = parse_bcf_filters(config['bcftools']['pass1_filters']),
-        bcf_outpath = "bcf_pass1/filtered_vcfs"
-    log:
-        "logs/bcftools/filter_sc_m2_calls.log"
+        # @HZ 04/01/2022
+        # need to add quotation marks around these filters in the shell command, because snakemake will input these params.X as string without quotation marks
+        sc_vcf_filters = parse_bcf_filters(config['bcftools']['pass1_sc_vcf_filters']),
+        merged_vcf_filters = parse_bcf_filters(config['bcftools']['pass1_merged_vcf_filters']), 
     conda:
         "../envs/bcftools.yaml"
-    threads: 4
+    threads: lambda wildcards, attempt: attempt * 4,
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 2000,
-        time_min = 59
+        time_min = lambda wildcards, attempt: attempt * 119,
     shell:
         """
-        for m2_vcf in {input}; do 
+        mkdir -p {wildcards.sample_name}/bcf_pass1/filtered_vcfs
+        for m2_vcf in {input.sc_vcfs_filter_added}; do 
             
-            out_name=$(basename $m2_vcf)
-            echo 'processing ${{out_name}}'
+            out_name=$(basename ${{m2_vcf}})
             
-            bcftools norm -m- $m2_vcf | \
-            bcftools filter -i '{params.bcf_filters}' | \
+            
+            bcftools norm -m- ${{m2_vcf}} | \
+            bcftools filter -i '{params.sc_vcf_filters}' | \
             bgzip -c > \
-            {params.bcf_outpath}/${{out_name/somatic_m2_filter_added.vcf.gz/hard_filtered.vcf.gz}}
+            {wildcards.sample_name}/bcf_pass1/filtered_vcfs/${{out_name/somatic_m2_filter_added.vcf.gz/hard_filtered.vcf.gz}}
 
-            tabix {params.bcf_outpath}/${{out_name/somatic_m2_filter_added.vcf.gz/hard_filtered.vcf.gz}}
-
+            tabix {wildcards.sample_name}/bcf_pass1/filtered_vcfs/${{out_name/somatic_m2_filter_added.vcf.gz/hard_filtered.vcf.gz}}
+            echo cell -- ${{out_name}} -- norm, filter, zip, index done
         done
-        """
-    
-rule bcftools_pass1_merge_filtered_m2_calls:
-    # merge filtered single cell VCFs; filter again based on mutational prevalence across all cells; create statistics.
-    input:
-        filtered_sc_vcfs = expand("bcf_pass1/filtered_vcfs/{sample_name}_{cell_barcode}_hard_filtered.vcf.gz", cell_barcode = bars, sample_name = sample_name),
-        filtered_sc_vcfs_index = expand("bcf_pass1/filtered_vcfs/{sample_name}_{cell_barcode}_hard_filtered.vcf.gz.tbi", cell_barcode = bars, sample_name = sample_name),
-    output:
-        merged_prev_filtered_vcf = expand("bcf_pass1/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz", sample_name = sample_name),
-        merged_prev_filtered_vcf_stats = expand("bcf_pass1/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz.stats", sample_name = sample_name),
-    conda:
-        "../envs/bcftools.yaml"
-    threads: 4
-    resources:
-        mem_mb = lambda wildcards, attempt: attempt * 2000,
-        time_min = 59
-    shell:
-        """
-        bcftools merge --merge none {input.filtered_sc_vcfs} | \
+
+        bcftools merge --merge none $(find {wildcards.sample_name}/bcf_pass1/filtered_vcfs -name '*hard_filtered.vcf.gz') | \
         bcftools sort | \
-        bcftools filter -i 'N_PASS(GT!="mis") > 2' | \
+        bcftools filter -i '{params.merged_vcf_filters}' | \
         bgzip -c > \
         {output.merged_prev_filtered_vcf}
 
@@ -59,7 +45,6 @@ rule bcftools_pass1_merge_filtered_m2_calls:
 
         bcftools stats {output.merged_prev_filtered_vcf} > {output.merged_prev_filtered_vcf_stats}
         """
-    
 
 
 
