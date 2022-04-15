@@ -15,8 +15,8 @@ rule mutect2_sc_f_pass2:
         FILTERM2_OPS = parse_for_shell_args(config['mutect2']['filterm2_ops']),
     threads: lambda wildcards, attempt: attempt * 2
     resources: 
-        mem_mb = lambda wildcards, attempt: attempt * 8000,
-        time_min = lambda wildcards, attempt: attempt * 179,
+        mem_mb = lambda wildcards, attempt: attempt * 4000,
+        time_min = lambda wildcards, attempt: attempt * 359,
     conda:
         "../envs/var-calling.yaml"
     shell:

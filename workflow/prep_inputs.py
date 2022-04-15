@@ -7,7 +7,8 @@ from pathlib import Path
 import os
 import pysam
 import glob
-config = load_configfile('configs/custom_sc_varcall.yaml')
+
+config = load_configfile('configs/custom_tap_pipeline_hg19-ucsc.yaml')
 
 # ----- get sample and reference info -----
 cohort_name = config['sample_info']['cohort_name']
@@ -17,7 +18,6 @@ genome_version = config['reference_info']['genome_version']
 # ----- get directory info ----------------
 top_dir = Path(config['top_dir'])
 working_dir = top_dir / cohort_name
-#working_dir = top_dir / cohort_name / f"{sample_names}_{genome_version}" 
 scripts_dir = Path(config['scripts_dir'])
 
 #print(f'[INFO] wd --- {working_dir}')
@@ -90,4 +90,12 @@ def get_step4_m2_f_vcfs(wildcards):
     out = []
     for cell_barcode in sample_barcode_map[wildcards.sample_name]:
         out.append(f"{wildcards.sample_name}/mutect2_sc_f_pass2/m2_sc_vcfs_filter_added/{wildcards.sample_name}_{cell_barcode}_somatic_m2_filter_added.vcf.gz")
+    return out
+
+def get_step4_mpileup_vcfs(wildcards):
+    out = []
+    for cell_barcode in sample_barcode_map[wildcards.sample_name]:
+
+        #"{sample_name}/bcf_mpileup/sc_mpileup_vcfs/{sample_name}_{cell_barcode}_mpileup.vcf.gz",
+        out.append(f"{wildcards.sample_name}/bcf_mpileup/sc_mpileup_vcfs/{wildcards.sample_name}_{cell_barcode}_mpileup.vcf.gz")
     return out

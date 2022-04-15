@@ -1,12 +1,14 @@
 rule write_h5:
     # write SNV and CNV matrices.
     input:
-        output_vcf = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz",
-        output_vcf_stats = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz.stats",
+        # output_vcf = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz",
+        # output_vcf_stats = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz.stats",
+        output_vcf = "{sample_name}/bcf_mpileup/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz",
+        output_vcf_stats = "{sample_name}/bcf_mpileup/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz.stats",
         # the stat file ensures that the merging step finishes
-        read_counts_tsv = "{sample_name}/tap_pipeline_output/results/tsv/{sample_name}.barcode.cell.distribution.merged.tsv",
+        read_counts_tsv = "{sample_name}/tap_pipeline_output/results/tsv/{sample_name}.tube1.barcode.cell.distribution.tsv",
     output:
-        output_h5 = "{sample_name}/OUTPUTS/{sample_name}_DNA_CNV.h5",
+        output_h5 = "{sample_name}/OUTPUTS_from_mpileup/{sample_name}_DNA_CNV.h5",
     params:
         metadata_json = json.dumps({
             "sample_name": "{sample_name}",

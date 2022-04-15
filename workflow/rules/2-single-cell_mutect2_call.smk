@@ -17,7 +17,7 @@ rule split_sc_bams:
         time_min = lambda wildcards, attempt: attempt * 29,
     shell:
         # -- trial 1 --
-        'samtools view -b -r {wildcards.cell_barcode} {input.CELLS_BAM} > {output.sc_bam}'
+        "samtools view -b -r {wildcards.cell_barcode} {input.CELLS_BAM} > {output.sc_bam}"
         # -- trial 2 --
         # "mkdir -p {output.sc_bams_dir}; "
         # "cd {output.sc_bams_dir}; "
@@ -32,7 +32,8 @@ rule mutect2_sc_pass1:
     # scattered by single cell
     input:
         sc_bam = "{sample_name}/sc_bams/{sample_name}_{cell_barcode}.bam",
-    output: 
+    output:
+         
         vcf = "{sample_name}/mutect2_sc_pass1/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz",
         stats = "{sample_name}/mutect2_sc_pass1/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz.stats",
         vcf_filter_added = "{sample_name}/mutect2_sc_pass1/m2_sc_vcfs_filter_added/{sample_name}_{cell_barcode}_somatic_m2_filter_added.vcf.gz",

@@ -24,7 +24,7 @@ import os
 # metadata = json.loads(metadata)
 
 # get variables from snakemake
-sample_name = snakemake.config['sample_info']['sample_name']
+sample_name = snakemake.wildcards.sample_name
 
 #metadata = snakemake.params.metadata_json
 metadata = json.loads(snakemake.params.metadata_json)
@@ -33,16 +33,20 @@ for i in metadata:
         metadata[i] = json.dumps(metadata[i])
 print(metadata)
 
-all_cell_vcf = snakemake.input.output_vcf[0]
+all_cell_vcf = snakemake.input.output_vcf
 amplicons_file = snakemake.config['reference_info']['panel_amplicon_file']
-read_counts_tsv = snakemake.input.read_counts_tsv[0]
-output_h5 = snakemake.output.output_h5[0]
+read_counts_tsv = snakemake.input.read_counts_tsv
+output_h5 = snakemake.output.output_h5
 
-output_dir = output_h5.split('/')[0]
-try:
-    os.mkdir(output_dir)
-except OSError as error:
-    print(f'[WARNING] ----- {error}')    
+print(f'[INFO] ----- output file: {output_h5}')
+
+# output_dir = output_h5.split('/')[0]
+
+# print(f'[INFO] ----- output directory: {output_dir}')
+# try:
+#     os.mkdir(output_dir)
+# except OSError as error:
+#     print(f'[WARNING] ----- {error}')    
 
 ###############################
 # part 1 ----- create DNA assay

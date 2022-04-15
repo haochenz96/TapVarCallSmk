@@ -19,16 +19,17 @@ rule all:
         #get_step2_output(sample_name, sample_barcode_map),
         # expand("{cohort_name}-{sample_name}/mutect2_sc_pass1/m2_sc_vcfs_filter_added/{sample_name}_{cell_barcode}_somatic_m2_filter_added.vcf.gz", cell_barcode = bars, sample_name = sample_name, cohort_name = cohort_name),
         # ---- step-3 output:
-        expand("{sample_name}/bcf_pass1/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz", sample_name = sample_names),
+        # expand("{sample_name}/bcf_pass1/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz", sample_name = sample_names),
         # ---- step-4 output:
         #get_step4_outputs(sample_names, sample_barcode_map)
         # ---- step-5_output:
-        # expand("{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz", sample_name = sample_names),
+        #expand("{sample_name}/bcf_mpileup/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz", sample_name = sample_names),
         # ---- step-6 output:
-        # expand("{sample_name}/OUTPUTS/{sample_name}_DNA_CNV.h5", sample_name = sample_names)
+        expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}_DNA_CNV.h5", sample_name = sample_names)
 
-include: "rules/2-single-cell_mutect2_call.smk"
-include: "rules/3-bcf_filter_and_combine_pass1.smk"
-# include: "rules/4-single-cell_mutect2_force_call.smk"
-# include: "rules/5-bcf_filter_and_combine_pass2.smk"
-# include: "rules/6-generate_outputs.smk"
+#include: "rules/2-single-cell_mutect2_call.smk"
+#include: "rules/3-bcf_filter_and_combine_pass1.smk"
+include: "rules/4-single-cell_bcftools_mpileup.smk"
+#include: "rules/4-single-cell_mutect2_force_call.smk"
+#include: "rules/5-filter_and_combine_sc_m2_f_vcfs.smk"
+include: "rules/6-generate_outputs.smk"

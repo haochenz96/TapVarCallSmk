@@ -1,11 +1,11 @@
 #!/bin/bash 
-#BSUB -J snakemake-RA17_22_panel2
+#BSUB -J snakemake-RA17_22
 #BSUB -sla CMOMEM -R highmem                                                  
-#BSUB -n 4                # number of core(tasks) for parallel jobs          
+#BSUB -n 2                # number of core(tasks) for parallel jobs          
 #BSUB -R rusage[mem=8]    # expected resorce consumption for memory
 #BSUB -W 10:00            # run time limit (hours)
-#BSUB -o /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/RA17_22_snakemake_pass1.stdout
-#BSUB -eo /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/RA17_22_snakemake_pass1.stderr
+#BSUB -o /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/RA17_22_mpileup_snakemake.stdout
+#BSUB -eo /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/RA17_22_mpileup_snakemake.stderr
 
 if [ -f ~/.bashrc ] ; then
     . ~/.bashrc
@@ -15,6 +15,4 @@ conda activate snakemake
 cd /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE
 snakemake \
     --profile lsf \
-    --rerun-incomplete \
-    --scheduler greedy \
-    --verbose
+    --rerun-incomplete
