@@ -4,8 +4,8 @@
 #BSUB -n 2                # number of core(tasks) for parallel jobs          
 #BSUB -R rusage[mem=8]    # expected resorce consumption for memory
 #BSUB -W 10:00            # run time limit (hours)
-#BSUB -o /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/RA17_22_mpileup_snakemake.stdout
-#BSUB -eo /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/RA17_22_mpileup_snakemake.stderr
+#BSUB -o /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/normal_pancreas_b2_4samples_snakemakev2.stdout
+#BSUB -eo /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/normal_pancreas_b2_4samples_mpileup_snakemakev2.stderr
 
 if [ -f ~/.bashrc ] ; then
     . ~/.bashrc

@@ -27,9 +27,10 @@ rule all:
         # ---- step-6 output:
         expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}_DNA_CNV.h5", sample_name = sample_names)
 
-#include: "rules/2-single-cell_mutect2_call.smk"
-#include: "rules/3-bcf_filter_and_combine_pass1.smk"
-include: "rules/4-single-cell_bcftools_mpileup.smk"
+include: "rules/1-split_sc_bams.smk"
+# include: "rules/2-single-cell_mutect2_call.smk"
+# include: "rules/3-bcf_filter_and_combine_pass1.smk"
+# include: "rules/4-single-cell_bcftools_mpileup.smk"
 #include: "rules/4-single-cell_mutect2_force_call.smk"
 #include: "rules/5-filter_and_combine_sc_m2_f_vcfs.smk"
-include: "rules/6-generate_outputs.smk"
+# include: "rules/6-generate_outputs.smk"

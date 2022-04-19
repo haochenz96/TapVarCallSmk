@@ -8,7 +8,7 @@ import os
 import pysam
 import glob
 
-config = load_configfile('configs/custom_tap_pipeline_hg19-ucsc.yaml')
+config = load_configfile('configs/custom_tap_pipeline_hg19-b37.yaml')
 
 # ----- get sample and reference info -----
 cohort_name = config['sample_info']['cohort_name']
@@ -39,15 +39,6 @@ scripts_dir = Path(config['scripts_dir'])
 # if not part_1_output.is_file():
 #     print("[WARNING] part 1 output -- combined_cells.bam -- does not exist!")
 
-# (1) get single-cell barcodes for each sample
-sample_barcode_map = {} # <--------------------------------------------- global
-for sample_i in sample_names:
-    bars = [] # <------------------------------------------------------- global
-    part_1_output = working_dir / sample_i / 'tap_pipeline_output' / 'results' / 'bam' / f'{sample_i}.tube1.cells.bam'
-    with pysam.AlignmentFile(part_1_output, "rb") as cells_bam:
-        for i in cells_bam.header['RG']:
-            bars.append(i['SM'])
-    sample_barcode_map[sample_i] = bars
 print('[INFO] ----- barcode reading done')
 
 # (2) get the single-cell "filter_added.vcf.gz" outputs

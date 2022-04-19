@@ -28,12 +28,11 @@ rule split_sc_bams:
         # "-o {params.sc_bams_dir} "
         # "-n {params.sample_name} "
 
-rule mutect2_sc_pass1:
+rule mutect2_sc:
     # scattered by single cell
     input:
         sc_bam = "{sample_name}/sc_bams/{sample_name}_{cell_barcode}.bam",
-    output:
-         
+    output:  
         vcf = "{sample_name}/mutect2_sc_pass1/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz",
         stats = "{sample_name}/mutect2_sc_pass1/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz.stats",
         vcf_filter_added = "{sample_name}/mutect2_sc_pass1/m2_sc_vcfs_filter_added/{sample_name}_{cell_barcode}_somatic_m2_filter_added.vcf.gz",
