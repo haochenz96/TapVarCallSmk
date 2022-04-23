@@ -1,9 +1,0 @@
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
-dependencies:
-  - strelka==2.9.10
-  - samtools==1.13
-  - bcftools==1.13
-  - picard==2.25.7

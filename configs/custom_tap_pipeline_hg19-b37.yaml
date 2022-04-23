@@ -2,10 +2,14 @@
 
 top_dir: /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom
 scripts_dir: /home/zhangh5/work/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/scripts
+
+# ----- working directory info -----
+working_dir: "default" # <------- if not default, will be set under {top_dir}
+
 # ----- sample info -----
 sample_info:
-    cohort_name: M13
-    sample_names: M13_1
+    cohort_name: RA16_29
+    sample_names: ['RA16_29-16_1', 'RA16_29-24_1', 'RA16_29-25_1', 'RA16_29-32_1', 'RA16_29-47_1', 'RA16_29-2_1']
     # RA17_13
     # batch1: ['RA17_13-50_1', 'RA17_13-55_1'] 
     # batch2: [ 'RA17_13-56_1', 'RA17_13-67_1']
@@ -20,6 +24,7 @@ reference_info:
     reference_genome: /home/zhangh5/work/commons/Tapestri_ref/hg19-b37/hg19-b37.fasta
     genome_version: hg19-b37
     panel_amplicon_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-b37/3359.amplicons.bed
+    panel_amplicon_file_gz: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-b37/3359.amplicons.bed.gz
     panel_version: iacobuzio3359
 
 

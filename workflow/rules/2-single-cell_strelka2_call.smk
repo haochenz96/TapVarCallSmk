@@ -1,40 +1,80 @@
-rule strelk2_sc_configure:
+rule sc_strelk2_configure:
+    # (1) create Strelka2-SC configuration script
+    # note we are using Strelka2 in germline mode
     # scattered by single cell
     input:
-        SC_BAM = "{sample_name}/sc_bams/{sample_name}_{cell_barcode}.bam",
-    output:  
-        RUN_SCRIPT = "{sample_name}/strelka2_sc/{sample_name}_{cell_barcode}_germline_s2.runWorkflow.py",
-    params:
+        SC_BAM = "{sample_name}/sc_bams/{sample_name}_{cell_num_index}.bam",
         REF = config['reference_info']['reference_genome'],
-        AMPLICON_FILE = config['reference_info']['panel_amplicon_file'],
-        RUNDIR = "strelka/{patient}/{sample}/"
+        AMPLICON_FILE = config['reference_info']['panel_amplicon_file_gz'],
+    output:  
+        RUN_SCRIPT = "{sample_name}/sc_strelka2_call/{sample_name}_{cell_num_index}/runWorkflow.py",
+    params:
+        RUNDIR = "{sample_name}/sc_strelka2_call/{sample_name}_{cell_num_index}/"
     threads: lambda wildcards, attempt: attempt * 2,
     resources: 
-        mem_mb = lambda wildcards, attempt: attempt * 8000,
+        mem_mb = lambda wildcards, attempt: attempt * 2000,
+        time_min = lambda wildcards, attempt: attempt * 29,
+    conda:
+        "../envs/strelka2.yaml"
+    shell:
+    	"configureStrelkaGermlineWorkflow.py "
+        "--bam {input.SC_BAM} "
+        "--referenceFasta {input.REF} "
+        "--runDir {params.RUNDIR} "
+
+rule sc_strelka2_exec:
+    # (2) execute Strelka2-SC configuration script
+    # note we are using Strelka2 in germline mode
+    # scattered by single cell
+    input:
+        RUN_SCRIPT = "{sample_name}/sc_strelka2_call/{sample_name}_{cell_num_index}/runWorkflow.py",
+    output:  
+        VCF = "{sample_name}/sc_strelka2_call/{sample_name}_{cell_num_index}/results/variants/variants.vcf.gz",
+    threads: lambda wildcards, attempt: attempt * 2,
+    resources: 
+        mem_mb = lambda wildcards, attempt: attempt * 2000,
         time_min = lambda wildcards, attempt: attempt * 59,
     conda:
-        "../envs/var-calling.yaml"
+        "../envs/strelka2.yaml"
     shell:
-    	"configureStrelkaSomaticWorkflow.py "
-        "--normalBam {input.normal} "
-        "--tumorBam {input.tumor} "
-        "--referenceFasta {input.ref} "
-        "--runDir {params.rundir} "
+        "{input.RUN_SCRIPT} -m local -j {threads}"
 
-rule strelka2_sc_exec:
-    # run each strelka configureation script
-    input:
-        runpy = "strelka/{patient}/{sample}/runWorkflow.py"
-    output:  
-        VCF = "{sample_name}/strelka2_sc/s2_sc_vcfs/{sample_name}_{cell_barcode}_germline_s2.vcf.gz",
-    params:
-        cores = config['strelka2']['cores']
-    wildcard_constraints:
-        patient = "\w+",
-        sample = "\w+"
-    resources: 
-        mem_mb = lambda wildcards, attempt: attempt * 3000
-    conda:
-        "../envs/strelka2.yml"
-    shell:
-        "{input.runpy} -m local -j {params.cores}"
+# rule combined_strelka2_exec:
+#     # (1) create combined_strelka2 configuration script
+#     # note we are using Strelka2 in germline mode
+#     input:
+#         SC_BAMs = get_step1_sc_bams_by_sample,
+#         REF = config['reference_info']['reference_genome'],
+#         AMPLICON_FILE = config['reference_info']['panel_amplicon_file_gz'],
+#     output:  
+#         RUN_SCRIPT = "{sample_name}/sc_strelka2_call/runWorkflow.py",
+#     params:
+#         RUNDIR = "{sample_name}/sc_strelka2_call/"
+#     threads: lambda wildcards, attempt: attempt * 2,
+#     resources: 
+#         mem_mb = lambda wildcards, attempt: attempt * 4000,
+#         time_min = lambda wildcards, attempt: attempt * 29,
+#     conda:
+#         "../envs/strelka2.yaml"
+#     shell:
+#     	"configureStrelkaGermlineWorkflow.py "
+#         "--bam {input.SC_BAM} "
+#         "--referenceFasta {input.REF} "
+#         "--callRegions {input.AMPLICON_FILE} "
+#         "--runDir {params.RUNDIR} "
+
+# rule combined_strelka2_exec:
+#     # (2) execute combined_strelka2 configuration script
+#     # note we are using Strelka2 in germline mode
+#     input:
+#         RUN_SCRIPT = "{sample_name}/sc_strelka2_call/runWorkflow.py",
+#     output:  
+#         VCF = "{sample_name}/sc_strelka2_call/results/variants/variants.vcf.gz",
+#     threads: lambda wildcards, attempt: attempt * 12,
+#     resources: 
+#         mem_mb = lambda wildcards, attempt: attempt * 4000,
+#         time_min = lambda wildcards, attempt: attempt * 599,
+#     conda:
+#         "../envs/strelka2.yaml"
+#     shell:
+#         "{input.RUN_SCRIPT} -m local -j {threads}"

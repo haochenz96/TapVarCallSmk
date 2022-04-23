@@ -3,8 +3,8 @@ rule write_h5:
     input:
         # output_vcf = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz",
         # output_vcf_stats = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz.stats",
-        output_vcf = "{sample_name}/bcf_mpileup/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz",
-        output_vcf_stats = "{sample_name}/bcf_mpileup/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz.stats",
+        output_vcf = "{sample_name}/4-bcf_genotyping/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz",
+        output_vcf_stats = "{sample_name}/4-bcf_genotyping/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz.stats",
         # the stat file ensures that the merging step finishes
         read_counts_tsv = "{sample_name}/tap_pipeline_output/results/tsv/{sample_name}.tube1.barcode.cell.distribution.tsv",
     output:
