@@ -24,15 +24,13 @@ rule all:
         # # ---- step-3 output:
         # expand("{sample_name}/3-bcf_filter/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz", sample_name = sample_names),
         # # ---- step-4 output:
-        # expand("{sample_name}/4-bcf_genotyping/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz.stats", sample_name = sample_names)
-        # ---- step-5_output:
-        expand("{sample_name}/4-bcf_genotyping/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz", sample_name = sample_names),
+        expand("{sample_name}/4-bcf_genotyping/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz.stats", sample_name = sample_names),
         # ---- step-6 output:
-        #expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}_DNA_CNV.h5", sample_name = sample_names)
+        expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}_DNA_CNV.h5", sample_name = sample_names)
 
 include: "rules/1-split_sc_bams.smk"
 include: "rules/2-single-cell_mutect2_call.smk"
 include: "rules/3-filter_and_merge_sc_var_call.smk"
 include: "rules/4-single-cell_genotying.smk"
-# include: "rules/5-filter_and_combine_sc_m2_f_vcfs.smk"
-# include: "rules/6-generate_outputs.smk"
+# include: "rules/5-filter_and_combine_sc_m2_f_vcfs.smk" # <----- obsolete without mutect2-f
+include: "rules/6-generate_outputs.smk"

@@ -22,7 +22,8 @@ rule sc_mpileup:
         SC_BAM = "{sample_name}/1-sc_bams/{sample_name}_{cell_num_index}.bam",
         CANDIDATE_ALLELE = "{sample_name}/4-bcf_genotyping/{sample_name}-candidate_alleles.tsv.gz",
     output:
-        SC_MPILEUP_VCF = "{sample_name}/4-bcf_genotyping/sc_mpileup_vcfs/{sample_name}_{cell_num_index}_mpileup.vcf.gz",
+        SC_MPILEUP_VCF = "{sample_name}/4-bcf_genotyping/sc_mpileup_vcfs/{sample_name}_{cell_num_index}/{sample_name}_{cell_num_index}_mpileup.vcf.gz",
+        SC_MPILEUP_VCF_raw = "{sample_name}/4-bcf_genotyping/sc_mpileup_vcfs/{sample_name}_{cell_num_index}/{sample_name}_{cell_num_index}_raw_counts.vcf.gz",
     params:
         REF_GENOME = config['reference_info']['reference_genome'],
         PANEL_AMPLICON = config['reference_info']['panel_amplicon_file'],
@@ -34,22 +35,47 @@ rule sc_mpileup:
         "../envs/bcftools.yaml"
     shell:
         """
-        # mpileup and call
+        OUT_DIR="{wildcards.sample_name}/4-bcf_genotyping/sc_mpileup_vcfs/{wildcards.sample_name}_{wildcards.cell_num_index}"
+        mkdir -p $OUT_DIR
+
+        # @STEP1 mpileup and call
+        # @HZ 04/24/2022 added option "--no-BAQ"; try to remove base quality consideration to recover MNP's
         bcftools mpileup \
             -Ou \
             -R {params.PANEL_AMPLICON} \
             -f {params.REF_GENOME} \
             --annotate FORMAT/AD,FORMAT/DP,INFO/AD \
-            -d 100000 \
+            --max-depth 100000 \
+            --max-idepth 100000 \
+            --no-BAQ \
             {input.SC_BAM} | \
         bcftools call \
             --keep-alts \
             -C alleles \
             -T {input.CANDIDATE_ALLELE} \
             --multiallelic-caller \
-            -Ov - | \
-        bgzip -c > {output.SC_MPILEUP_VCF} && \
+            -Oz \
+            -o {output.SC_MPILEUP_VCF} && \
         tabix {output.SC_MPILEUP_VCF}
+
+        # @STEP2 get raw counts
+        # extract INFO/AD into a tab-delimited annotation file
+        SAMPLE_NAME=$(bcftools query -l {output.SC_MPILEUP_VCF})
+
+        bcftools query -f '%CHROM\t%POS\t%AD{{0}},%AD{{1}}\n' {output.SC_MPILEUP_VCF} | bgzip -c > $OUT_DIR/annot.txt.gz && \
+        tabix -s1 -b2 -e2 $OUT_DIR/annot.txt.gz
+
+        echo -e '##FORMAT=<ID=AD,Number=1,Type=Integer,Description="Total allelic depths (high-quality bases)">' >> $OUT_DIR/hdr.txt
+        bcftools annotate \
+            -s $SAMPLE_NAME \
+            -a $OUT_DIR/annot.txt.gz \
+            -h $OUT_DIR/hdr.txt \
+            -c CHROM,POS,FORMAT/AD \
+            -Oz \
+            -o {output.SC_MPILEUP_VCF_raw} \
+            {output.SC_MPILEUP_VCF}
+
+        # @STEP3 calculate AF
         """
 
 rule filter_and_merge_sc_mpileup:

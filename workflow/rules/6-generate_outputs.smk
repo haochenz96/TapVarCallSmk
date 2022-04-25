@@ -1,4 +1,4 @@
-rule write_h5:
+rule write_h5_from_vcf_and_rc:
     # write SNV and CNV matrices.
     input:
         # output_vcf = "{sample_name}/bcf_pass2/{sample_name}-f_q_intersected.vcf.gz",
@@ -8,6 +8,7 @@ rule write_h5:
         # the stat file ensures that the merging step finishes
         read_counts_tsv = "{sample_name}/tap_pipeline_output/results/tsv/{sample_name}.tube1.barcode.cell.distribution.tsv",
     output:
+        read_count_tsv_renamed = "{sample_name}/OUTPUTS_from_mpileup/{sample_name}.per_amplicon_read_counts.tsv",
         output_h5 = "{sample_name}/OUTPUTS_from_mpileup/{sample_name}_DNA_CNV.h5",
     params:
         metadata_json = json.dumps({
@@ -19,6 +20,7 @@ rule write_h5:
             "bcftools_pass1_merged_vcf_filters": config['bcftools']['pass1_merged_vcf_filters'],
             "bcftools_pass2_sc_vcf_filters": config['bcftools']['pass2_sc_vcf_filters'],
         }),
+        bars_map = lambda wildcards: sample_barcode_maps[wildcards.sample_name],
     conda:
         "../envs/mosaic.yaml"
     threads: 4
@@ -26,4 +28,4 @@ rule write_h5:
         mem_mb = lambda wildcards, attempt: attempt * 2000,
         time_min = 59
     script:
-        "../scripts/write_h5.py"
+        "../scripts/write_h5_from_combined-vcf_and_rc.py"

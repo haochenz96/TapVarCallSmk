@@ -142,5 +142,5 @@ def get_step2_m2_filtered_vcfs_by_sample(wildcards):
 def get_step4_mpileup_vcfs(wildcards):
     out = []
     for cell_num_index in sample_barcode_maps[wildcards.sample_name].keys():
-        out.append(f"{wildcards.sample_name}/4-bcf_genotyping/sc_mpileup_vcfs/{wildcards.sample_name}_{cell_num_index}_mpileup.vcf.gz")
+        out.append(f"{wildcards.sample_name}/4-bcf_genotyping/sc_mpileup_vcfs/{wildcards.sample_name}_{cell_num_index}/{wildcards.sample_name}_{cell_num_index}_raw_counts.vcf.gz")
     return out
