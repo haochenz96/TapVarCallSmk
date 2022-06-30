@@ -1,0 +1,103 @@
+rule step4_sc_mutect2_f_pass2:
+    # scattered by single cell
+    # this step, even at single-cell level, requires lots of resource. Might need some sample-specific hyperparameter tuning.
+    input:
+        sc_bam = "{sample_name}/1-sc_bams/{sample_name}_{cell_barcode}.bam",
+        Q_VCF = "{sample_name}/3-bcf_filter/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz",
+    output: 
+    	#vcf="$outpath/mutect2/__m2_sc_vcfs/${sample_name}_${cell_name}_somatic_m2.vcf.gz"
+        sc_vcf = "{sample_name}/4-sc_mutect_f_call/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz",
+        stats = "{sample_name}/4-sc_mutect_f_call/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz.stats", 
+        # {output.stats} ensures Mutect2 finishes and is critical because this step usually takes long and several restarts
+    params:
+        REF = config['reference_info']['reference_genome'],
+        mrpas = config['mutect2']['mrpas'],
+        FILTERM2_OPS = parse_for_shell_args(config['mutect2']['filterm2_ops']),
+    threads: 2
+    resources: 
+        mem_mb = lambda wildcards, attempt: ( 2**(attempt-1) ) * 2000,
+        time_min = lambda wildcards, attempt: attempt * 59 + (attempt**2) * 60,
+        # time_min = lambda wildcards, attempt: attempt * 159 + (attempt**2) * 60, # for second try
+    conda:
+        "../envs/mutect2.yaml"
+    shell:
+    	"sc_bai='{input.sc_bam}.bai'; "
+    	"if ! [ -f '$sc_bai' ]; then samtools index {input.sc_bam}; fi; "
+        "gatk Mutect2 "
+        "--java-options '-XX:-CreateCoredumpOnCrash' "
+        "-alleles {input.Q_VCF} "
+        "-L {input.Q_VCF} "
+        "--genotype-filtered-alleles "
+        "--max-reads-per-alignment-start {params.mrpas} "
+        "-R {params.REF} "
+        "-I {input.sc_bam} "
+        "-O {output.sc_vcf}; "
+
+rule step4_bcftools_pass2_filter_merge_sc_m2_f_calls:
+    # scatter by sample
+    # (1) for each single cell VCF, split multiallelic sites, apply only DP filter and index; 
+    # (2) merge filtered single cell VCFs; no filter based on mutational prevalence across all cells; create statistics.
+    input:
+        sc_f_vcfs = get_step4_m2_f_vcfs,
+    output:
+        merged_f_vcf = "{sample_name}/4-sc_mutect_f_call/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz",
+        merged_f_vcf_stats = "{sample_name}/4-sc_mutect_f_call/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz.stats",
+    conda:
+        "../envs/bcftools.yaml"
+    threads: lambda wildcards, attempt: attempt * 4,
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 2000,
+        time_min = lambda wildcards, attempt: attempt * 119,
+    shell:
+        """
+        mkdir -p {wildcards.sample_name}/4-sc_mutect_f_call/filtered_vcfs
+        for m2_vcf in {input.sc_f_vcfs}; do 
+            
+            out_name=$(basename ${{m2_vcf}})
+            
+            bcftools norm -m- ${{m2_vcf}} | \
+            bgzip -c > \
+            {wildcards.sample_name}/4-sc_mutect_f_call/filtered_vcfs/${{out_name/somatic_m2.vcf.gz/normed.vcf.gz}}
+
+            tabix {wildcards.sample_name}/4-sc_mutect_f_call/filtered_vcfs/${{out_name/somatic_m2.vcf.gz/normed.vcf.gz}}
+            echo cell -- ${{out_name}} -- norm, filter, zip, index done
+        done
+
+        bcftools merge --merge none $(find {wildcards.sample_name}/4-sc_mutect_f_call/filtered_vcfs -name '*normed.vcf.gz') | \
+        bcftools sort | \
+        bgzip -c > \
+        {output.merged_f_vcf}
+
+        tabix {output.merged_f_vcf}
+
+        bcftools stats {output.merged_f_vcf} > {output.merged_f_vcf_stats}
+        """
+
+rule step4_bcftools_pass2_intersect_f_q_vcfs:
+    # intersect q_vcf and f_vcf
+    # all samples together
+    input:
+        f_vcf = "{sample_name}/4-sc_mutect_f_call/combined_vcf/{sample_name}-combined_VCF.filtered.vcf.gz",
+        q_vcf = "{sample_name}/3-bcf_filter/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz",
+    output:
+        output_vcf = "{sample_name}/4-sc_mutect_f_call/{sample_name}-f_q_intersected.vcf.gz",
+        output_vcf_stats = "{sample_name}/4-sc_mutect_f_call/{sample_name}-f_q_intersected.vcf.gz.stats",
+    conda:
+        "../envs/bcftools.yaml"
+    threads: lambda wildcards, attempt: attempt * 2
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 2000,
+        time_min = 59
+    shell:
+        """
+        bcftools isec \
+            -n=2 \
+            -w2 \
+            -Oz \
+            -o {output.output_vcf} \
+            {input.q_vcf} \
+            {input.f_vcf}
+        
+        tabix {output.output_vcf}
+        bcftools stats {output.output_vcf} > {output.output_vcf_stats}
+        """

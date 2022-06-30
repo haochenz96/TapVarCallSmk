@@ -1,18 +1,31 @@
 #!/bin/bash 
-#BSUB -J snakemake-RA16_29
+#BSUB -J snakemake-master
 #BSUB -sla CMOMEM -R highmem                                                  
-#BSUB -n 4                # number of core(tasks) for parallel jobs          
-#BSUB -R rusage[mem=8]    # expected resorce consumption for memory
+#BSUB -n 1                # number of core(tasks) for parallel jobs          
+#BSUB -R rusage[mem=2]    # expected resorce consumption for memory
 #BSUB -W 24:00            # run time limit (hours)
-#BSUB -o /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/RA16_29_snakemakev2.stdout
-#BSUB -eo /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/RA16_29_snakemakev2.stderr
+#BSUB -o /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/batch2-Caitlin2.stdout
+#BSUB -eo /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/batch2-Caitlin2.stderr
 
 if [ -f ~/.bashrc ] ; then
     . ~/.bashrc
 fi
 
 conda activate snakemake 
+# export SNAKEMAKE_OUTPUT_CACHE=/home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/snakemake-cache/ # <--- define cache location
+export XDG_CACHE_HOME=/home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/snakemake-cache/ # <--- define cache location
+
 cd /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE
+
 snakemake \
     --profile lsf \
-    --conda-prefix /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/conda
+    --conda-prefix /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/conda \
+    --configfile configs/panel2_hg19-b37.yaml \
+    --quiet rules \
+    --unlock
+
+snakemake \
+    --profile lsf \
+    --conda-prefix /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/conda \
+    --configfile configs/panel2_hg19-b37.yaml \
+    --quiet rules

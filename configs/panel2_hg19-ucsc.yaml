@@ -1,0 +1,62 @@
+# input variables for running the custom SCVarCall pipeline
+
+top_dir: /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom
+scripts_dir: /home/zhangh5/work/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/scripts
+
+# ----- working directory info -----
+working_dir: "default" # <------- if not default, will be set under {top_dir}
+
+# ----- sample info -----
+sample_info:
+    
+    # cohort_name: 'RA17_22_hg19-ucsc'
+    # # sample_names: ['RA17_22-33_2']
+    # sample_names: ['RA17_22-33_2', 'RA17_22-35_1', 'RA17_22-39_6', 'RA17_22-42_2', 
+    # 'RA17_22-04_1', 'RA17_22-06_2', 'RA17_22-11_1', 'RA17_22-27_2']
+
+    cohort_name: Caitlin
+    sample_names: ['M04-1', 'M04-3', 'M07-3'] 
+    
+    # cohort_name: RA15_06
+    # sample_names: ['RA15_06-3_1', 'RA15_06-10_1_3rd', 'RA15_06-14_1']
+
+    # cohort_name: RA16_08
+    # sample_names: ['RA16_08-08_2', 'RA16_08-08_7', 'RA16_08-08_8', 'RA16_08-10_3']
+
+    # cohort_name: 'RA17_22_hg19-ucsc'
+    # sample_names: ['RA17_22-32_1', 'RA17_22-33_2', 'RA17_22-35_1', 'RA17_22-39_6', 'RA17_22-42_2']
+    # ['RA17_22-04_1', 'RA17_22-06_2', 'RA17_22-11_1', 'RA17_22-27_2']
+
+# combined_cells.bam: /home/zhangh5/work/Tapestri_batch1/pipeline_results_Mutect2/autopsy/RA17_22-39_2_fresh_hg19-b37/tap_pipeline_output/results/bam/RA17_22-39_2_fresh_hg19-b37.tube1.cells.bam
+
+# ----- reference files -----
+reference_info:
+    reference_genome: /home/zhangh5/work/commons/Tapestri_ref/hg19-ucsc/ucsc_hg19.fa
+    genome_version: hg19-ucsc
+    panel_insert_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.bed # <------ @HZ 04/28/2022 This is the insert.bed
+    panel_amplicon_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.amplicons.bed
+    panel_version: iacobuzio3359
+
+
+# ----- tool parameters -----
+
+mutect2:
+    # note, all supplementary database VCF files must be indexed, with .idx prefix
+    germline_resource: /home/zhangh5/work/commons/Broad-somatic-b37/af-only-gnomad.raw.sites.b37.vcf.gz
+    mrpas: 0
+    filterm2_ops:
+        min-allele-fraction: 0.2
+        unique-alt-read-count: 2
+
+bcftools:
+    BCFTOOLS_EXEC: /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/resources/bcftools-1.15.1/bcftools
+    # note the single quotation mark and the double quotation mark are seemingly not interchangeable, based on bcftools' doc
+    pass1_sc_vcf_filters: ['FILTER!~"base_qual"', 'FILTER!~"low_allele_frac"', 'FILTER!~"weak_evidence"', 'FILTER!~"slippage"', 'FILTER!~"multiallelic"', 'FILTER!~"clustered_events"', 'FMT/DP>4', 'AF>0.2']
+    pass1_merged_vcf_filters: ['N_PASS(GT!="mis") > 2'] # a variant needs to be individually called in at least 3 cells
+    # pass2_sc_vcf_filters: ['FMT/DP>4'] # obsolete
+    # pass2_merged_vcf_filters: [''] # obsolete
+
+CRAVAT:
+    annotators: ["clinvar", "gnomad3", "chasmplus", 
+    "chasmplus_PAAD","civic","cosmic","dbsnp","dbsnp_common","clinvar","gnomad3",'thousandgenomes',
+     'go','ndex']
