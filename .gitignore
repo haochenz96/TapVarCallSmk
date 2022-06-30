@@ -4,3 +4,5 @@
 *.stderr
 *.stdout
 __pycache__
+*cache*
+*resources*
