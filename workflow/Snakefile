@@ -34,7 +34,9 @@ rule all:
         # expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}_DNA_CNV_bcf_mpileup.h5", sample_name = sample_names),
         # expand("{sample_name}/OUTPUTS_from_m2_f/{sample_name}_DNA_CNV_m2_f.h5", sample_name = sample_names)
         # # ---- step-6 output:
-        expand("{sample_name}/OUTPUTS_from_m2_f/{sample_name}_DNA_CNV_m2_f.bulk_annotated.h5", sample_name = sample_names)
+        expand("{sample_name}/OUTPUTS_from_m2_f/{sample_name}_DNA_CNV_m2_f.cravat_annotated.h5", sample_name = sample_names)
+        expand("{sample_name}/OUTPUTS_from_m2_f/annotations/{sample_name}_CRAVAT_output.cleaned.txt", sample_name = sample_names)
+        
 # include: "rules/0-run_tap_pipeline.smk"
 # include: "rules/1-split_sc_bams.smk"
 # include: "rules/2-single-cell_mutect2_call.smk"
@@ -43,4 +45,4 @@ rule all:
 include: "rules/4-single-cell_mutect2_force_call.smk"
 # include: "rules/4.5-filter_and_combine_sc_m2_f_calls.smk"  # <---- deprecated?
 include: "rules/5-generate_outputs.smk"
-include: "rules/6-analyze_outputs.smk"
+include: "rules/6-annotate_outputs.smk"

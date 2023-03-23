@@ -11,6 +11,7 @@ from h5.data import H5Writer
 from h5.constants import BARCODE, CHROM, ID, POS
 import mosaic.io as mio
 import mosaic.utils
+from tea.annotate import annotate_snv_amplicon_coverage
 
 import allel
 import pandas as pd
@@ -20,50 +21,43 @@ import json
 import os
 import logging
 import sys
-from datetime import datetime
-import pytz as tz
-
+from tea.utils import get_simple_timestamp
+from pathlib import Path
 ###############################
 # part 0 ----- parse inputs
 ###############################
 
-# @click.option('--sample_name', required=True, type=str)
-# @click.option('--metadata', required=True, type=str)
-# @click.option('--all_cell_vcf', required=True, type=str)
-# @click.option('--amplicon_file', required=True, type=str)
-# @click.option('--read_count_tsv', required=True, type=str)
-# @click.option('--output_dir', required=True, type=str)
-
-# metadata = json.loads(metadata)
-
+# ----- io -----
 # get variables from snakemake
 sample_name = snakemake.wildcards.sample_name
-bars_map = snakemake.params.bars_map # <----------- numerical index to cell barcode map
-bar_to_num_map = dict((v,k) for k,v in bars_map.items()) # swap key and value in bars_map
-#metadata = snakemake.params.metadata_json
+# --- input
+all_cell_vcf = snakemake.input.output_vcf
+read_counts_tsv = snakemake.input.read_counts_tsv
+# --- output
+temp_dir = snakemake.output.temp_dir
+read_counts_tsv_renamed = snakemake.output.read_count_tsv_renamed
+output_h5 = snakemake.output.output_h5
+# --- params
+log_file = snakemake.params.log_file
 metadata = json.loads(snakemake.params.metadata_json)
 for i in metadata:
     if isinstance(metadata[i], dict):
         metadata[i] = json.dumps(metadata[i])
 print(metadata)
-
-all_cell_vcf = snakemake.input.output_vcf
+bars_map = snakemake.params.bars_map # <----------- numerical index to cell barcode map
+bar_to_num_map = dict((v,k) for k,v in bars_map.items()) # swap key and value in bars_map
+# --- fetch from conig
+insert_file = snakemake.config['reference_info']['panel_insert_file']
 amplicons_file = snakemake.config['reference_info']['panel_amplicon_file']
-read_counts_tsv = snakemake.input.read_counts_tsv
-read_counts_tsv_renamed = snakemake.output.read_count_tsv_renamed
-output_h5 = snakemake.output.output_h5
 
 # ----- get current date and time
-eastern = tz.timezone('US/Eastern') # <------ uses US eastern time by default
-now = datetime.now(tz.utc).astimezone(eastern) 
-timestamp = now.strftime("%a %m %d %H:%M:%S %Z %Y")
-datetime_simple = now.strftime("%Y-%m-%d--%H_%M")
+simple_timestamp = get_simple_timestamp()
 
 # write logs
-with open(snakemake.log[0], "a") as f:
-    sys.stderr = f
+with open(log_file, "a") as f:
+    # sys.stderr = f
     sys.stdout = f
-    print(f'[{timestamp}]')
+    print(simple_timestamp)
     print(f'--- [STEP5] starting to write to output file: {output_h5}')
 
     ###############################
@@ -81,6 +75,8 @@ with open(snakemake.log[0], "a") as f:
     dna.row_attrs['barcode_copy'] = dna.row_attrs['barcode'] # make a copy
     dna.row_attrs['barcode'] = dna.row_attrs['cell_num_index'] # substitute barcode with num index
     print('--- [STEP5] renamed dna.row_attrs["barcode"] to numerical indices.')
+
+
 
     ###############################
     # part 2 ----- create CNV assay
@@ -135,3 +131,15 @@ with open(snakemake.log[0], "a") as f:
             writer.write(assay)
 
     print(f'--- [STEP5] finished adding DNA, CNV assays to output H5 file.')
+
+    # add amplicon coverage for each SNV
+    sample = mio.load(output_h5, name = sample_name, raw = False)
+    os.remove(output_h5)
+    Path(temp_dir).mkdir(parents=True, exist_ok=True)
+    snv_panel_bed_isec_df = annotate_snv_amplicon_coverage(
+        sample, 
+        working_dir = temp_dir, 
+        amplicon_bed = insert_file, 
+        )
+    sample.dna.add_col_attr('amplicon_coverage', snv_panel_bed_isec_df.values)
+    mio.save(sample, output_h5)

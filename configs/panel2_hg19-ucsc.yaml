@@ -8,20 +8,19 @@ working_dir: "default" # <------- if not default, will be set under {top_dir}
 
 # ----- sample info -----
 sample_info:
-    
     # cohort_name: 'RA17_22_hg19-ucsc'
     # # sample_names: ['RA17_22-33_2']
     # sample_names: ['RA17_22-33_2', 'RA17_22-35_1', 'RA17_22-39_6', 'RA17_22-42_2', 
-    # 'RA17_22-04_1', 'RA17_22-06_2', 'RA17_22-11_1', 'RA17_22-27_2']
+    # 'RA17_22-04_1', 'RA17_22-06_2', 'RA17_22-11_1', 'RA17_22-27_2', 'RA17_22-32_1']
 
-    cohort_name: Caitlin
-    sample_names: ['M04-1', 'M04-3', 'M07-3'] 
+    # cohort_name: Caitlin
+    # sample_names: ['M04-1', 'M04-3', 'M07-3'] 
     
     # cohort_name: RA15_06
     # sample_names: ['RA15_06-3_1', 'RA15_06-10_1_3rd', 'RA15_06-14_1']
 
-    # cohort_name: RA16_08
-    # sample_names: ['RA16_08-08_2', 'RA16_08-08_7', 'RA16_08-08_8', 'RA16_08-10_3']
+    cohort_name: RA16_08
+    sample_names: ['RA16_08-08_2', 'RA16_08-08_7', 'RA16_08-08_8', 'RA16_08-10_3']
 
     # cohort_name: 'RA17_22_hg19-ucsc'
     # sample_names: ['RA17_22-32_1', 'RA17_22-33_2', 'RA17_22-35_1', 'RA17_22-39_6', 'RA17_22-42_2']
@@ -57,6 +56,8 @@ bcftools:
     # pass2_merged_vcf_filters: [''] # obsolete
 
 CRAVAT:
+    username: zhangh5@mskcc.org
+    password: Hfhd68MdTtHn5UE
     annotators: ["clinvar", "gnomad3", "chasmplus", 
     "chasmplus_PAAD","civic","cosmic","dbsnp","dbsnp_common","clinvar","gnomad3",'thousandgenomes',
      'go','ndex']
