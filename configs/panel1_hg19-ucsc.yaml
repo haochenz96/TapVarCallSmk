@@ -17,8 +17,9 @@ sample_info:
 reference_info:
     reference_genome: /home/zhangh5/work/commons/Tapestri_ref/hg19-ucsc/ucsc_hg19.fa
     genome_version: hg19-ucsc
-    panel_BED_file: /home/zhangh5/work/Tapestri_batch1/panel_1440/panel_1440_hg19-ucsc/1440.bed # <------ @HZ 04/28/2022 This is the insert.bed
-    #panel_amplicon_file_gz: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-b37/3359.amplicons.bed.gz
+    panel_insert_file: /home/zhangh5/work/Tapestri_batch1/panel_1440/panel_1440_hg19-ucsc/1440.bed # <------ @HZ 04/28/2022 This is the insert.bed
+    panel_insert_file_UCSC: /home/zhangh5/work/Tapestri_batch1/panel_1440/panel_1440_hg19-ucsc/1440.bed
+    panel_amplicon_file: /home/zhangh5/work/Tapestri_batch1/panel_1440/panel_1440_hg19-ucsc/1440.amplicons
     panel_version: iacobuzio1440
 
 
@@ -33,9 +34,14 @@ mutect2:
         unique-alt-read-count: 2
 
 bcftools:
+    BCFTOOLS_EXEC: /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/resources/bcftools-1.15.1/bcftools
     # note the single quotation mark and the double quotation mark are seemingly not interchangeable, based on bcftools' doc
     pass1_sc_vcf_filters: ['FILTER!~"base_qual"', 'FILTER!~"low_allele_frac"', 'FILTER!~"weak_evidence"', 'FILTER!~"slippage"', 'FILTER!~"multiallelic"', 'FILTER!~"clustered_events"', 'FMT/DP>4', 'AF>0.2']
     pass1_merged_vcf_filters: ['N_PASS(GT!="mis") > 2'] # a variant needs to be individually called in at least 3 cells
     # pass2_sc_vcf_filters: ['FMT/DP>4'] # obsolete
     # pass2_merged_vcf_filters: [''] # obsolete
 
+CRAVAT:
+    username: zhangh5@mskcc.org
+    password: Hfhd68MdTtHn5UE
+    annotators: ["clinvar", "gnomad3", "chasmplus", "chasmplus_PAAD","civic","cosmic","dbsnp","dbsnp_common","clinvar","gnomad3",'thousandgenomes','go','ndex']

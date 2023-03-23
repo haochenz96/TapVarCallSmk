@@ -1,26 +1,17 @@
-rule step7-plot_tlod_metrics:
+rule STEP7_plot_2D_TLOD_metrics:
     input:
-        tlod_metrics_tsv = "{sample_name}/OUTPUTS_from_m2_f/{sample_name}_sc_TLOD_metrics.annotated.tsv",
-        tlod_metrics_ponv1_filtered_tsv = "{sample_name}/OUTPUTS_from_m2_f/{sample_name}_sc_TLOD_metrics.annotated.ponv1_filtered.tsv",
+        ponv1_filtered_h5 = ancient("{sample_name}/OUTPUTS_from_m2_f/{sample_name}_DNA_CNV_m2_f.bulk_annotated.ponv1_filtered.h5"),
     output:
-    
-rule step7_parse_annotate_cravat_output:
-    input:
-        ponv1_filtered_h5 = "{sample_name}/OUTPUTS_from_m2_f/{sample_name}_DNA_CNV_m2_f.bulk_annotated.ponv1_filtered.h5",
-        cravat_output = "{sample_name}/OUTPUTS_from_m2_f/annotations/{sample_name}_CRAVAT_output.txt",
-    output:
-        
+        fig1 = "{sample_name}/OUTPUTS_from_m2_f/analysis/{sample_name}_sc-max-TLOD_scatter_2D_bulk_val.png",
+        fig2 = "{sample_name}/OUTPUTS_from_m2_f/analysis/{sample_name}_sc-max-TLOD_scatter_2D_ponv2.png",
+        fig3 = "{sample_name}/OUTPUTS_from_m2_f/analysis/{sample_name}_sc-max-TLOD_scatter_2D_ponv1.png",
     params:
-        opencravat_username = config['CRAVAT']['username'],
-        opencravat_password = config['CRAVAT']['password'],
-        cravat_input_path = "{sample_name}/OUTPUTS_from_m2_f/annotations/{sample_name}_CRAVAT_input.txt",
-        cravat_annotators = config['CRAVAT']['annotators'],
-        log_file = "{sample_name}/logs/{sample_name}.snakemake.STEP6.log"
+        output_dir = "{sample_name}/OUTPUTS_from_m2_f/analysis",
     conda:
         "../envs/mosaic-custom.yaml"
-    threads: 2
+    threads: 4
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * 2000,
+        mem_mb = lambda wildcards, input, attempt: max(10 * input.size_mb * attempt, 4000),
         time_min = 59
     script:
-        "../scripts/STEP6-annotate_h5_with_CRAVAT.py"
+        "../scripts/STEP7-plot_var_metric_2D.py"

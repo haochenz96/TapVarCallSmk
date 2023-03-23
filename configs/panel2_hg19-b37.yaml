@@ -15,6 +15,7 @@ sample_info:
     # sample_names: ['M13-1_combined']
 
     cohort_name: RA16_29
+    # sample_names: ['RA16_29-16_1', 'RA16_29-32_1', 'RA16_29-47_1', 'RA16_29-2_1']
     sample_names: ['RA16_29-16_1', 'RA16_29-24_1', 'RA16_29-25_1', 'RA16_29-32_1', 'RA16_29-47_1', 'RA16_29-2_1']
     # cohort_name: RA17_13
     # sample_names: ['RA17_13-34_1', 'RA17_13-44_1', 'RA17_13-50_1', 'RA17_13-55_1', 'RA17_13-56_1', 'RA17_13-67_1']
@@ -29,6 +30,7 @@ reference_info:
     reference_genome: /home/zhangh5/work/commons/Tapestri_ref/hg19-b37/hg19-b37.fasta
     genome_version: hg19-b37
     panel_insert_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-b37/3359.bed # <------ @HZ 04/28/2022 This is the insert.bed
+    panel_insert_file_UCSC: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.bed
     panel_amplicon_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-b37/3359.amplicons.bed
     panel_version: iacobuzio3359
 

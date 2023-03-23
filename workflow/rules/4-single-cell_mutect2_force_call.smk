@@ -7,6 +7,7 @@ rule step4_sc_mutect2_f_pass2:
     output: 
     	#vcf="$outpath/mutect2/__m2_sc_vcfs/${sample_name}_${cell_name}_somatic_m2.vcf.gz"
         sc_vcf = "{sample_name}/4-sc_mutect_f_call/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz",
+        sc_vcf_idx = "{sample_name}/4-sc_mutect_f_call/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz.tbi",
         stats = "{sample_name}/4-sc_mutect_f_call/m2_sc_vcfs/{sample_name}_{cell_barcode}_somatic_m2.vcf.gz.stats", 
         # {output.stats} ensures Mutect2 finishes and is critical because this step usually takes long and several restarts
     params:
@@ -16,22 +17,25 @@ rule step4_sc_mutect2_f_pass2:
     threads: 2
     resources: 
         mem_mb = lambda wildcards, attempt: ( 2**(attempt-1) ) * 2000,
-        time_min = lambda wildcards, attempt: attempt * 59 + (attempt**2) * 60,
+        time_min = lambda wildcards, attempt: attempt * 179 + (attempt**2) * 60,
         # time_min = lambda wildcards, attempt: attempt * 159 + (attempt**2) * 60, # for second try
     conda:
         "../envs/mutect2.yaml"
     shell:
-    	"sc_bai='{input.sc_bam}.bai'; "
-    	"if ! [ -f '$sc_bai' ]; then samtools index {input.sc_bam}; fi; "
-        "gatk Mutect2 "
-        "--java-options '-XX:-CreateCoredumpOnCrash' "
-        "-alleles {input.Q_VCF} "
-        "-L {input.Q_VCF} "
-        "--genotype-filtered-alleles "
-        "--max-reads-per-alignment-start {params.mrpas} "
-        "-R {params.REF} "
-        "-I {input.sc_bam} "
-        "-O {output.sc_vcf}; "
+        """
+    	sc_bai='{input.sc_bam}.bai'
+    	if ! [ -f '$sc_bai' ]; then samtools index {input.sc_bam}; fi; 
+        gatk Mutect2 \
+            --java-options '-XX:-CreateCoredumpOnCrash' \
+            -alleles {input.Q_VCF} \
+            -L {input.Q_VCF} \
+            --genotype-filtered-alleles \
+            --max-reads-per-alignment-start {params.mrpas} \
+            -R {params.REF} \
+            -I {input.sc_bam} \
+            -O {output.sc_vcf} && \
+        samtools index {output.sc_vcf}
+        """
 
 
 
