@@ -1,9 +1,9 @@
-rule patient_sc_mpileup:
+rule patient_step2_sc_mpileup:
     # scattered by each sample, each single cell
     # mpileup and call variants 
     input:
         SC_BAM = get_individual_sc_bam, # retrieve EACH sc_bam given the wildcards: sample_name and cell_num_index
-        CANDIDATE_ALLELE = expand("fillout/input/{patient_name}.snv_union.for_genotyping.vcf.gz", patient_name = patient_name),
+        CANDIDATE_ALLELE = get_candidate_alleles(config['patient_info']['patient_name']),
     output:
         # SC_RAW_COUNTS_TXT = "fillout/{sample_name}/sc_mpileup_vcfs/{sample_name}_{cell_num_index}_raw_counts.txt.gz",
         SC_MPILEUP_VCF = "fillout/{sample_name}/sc_mpileup_vcfs/{sample_name}_{cell_num_index}_mpileup.normed.vcf.gz",
@@ -72,7 +72,7 @@ rule patient_sc_mpileup:
 #             > {output.SC_MPILEUP_DP_LAYER}
 #         """
 
-rule merge_raw_layers:
+rule patient_step2_merge_raw_layers:
     # scatter by sample
     # merge raw counts layers
     input:
@@ -88,6 +88,8 @@ rule merge_raw_layers:
         MERGE_SCRIPT = os.path.join(scripts_dir, "single_sample/STEP4-merge_sc_AD_DP.py")
     log:
         "fillout/logs/{sample_name}-genotype.log",
+    conda:
+        "../../envs/mosaic-custom.yaml"
     threads: lambda wildcards, attempt: attempt * 4,
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 4000,

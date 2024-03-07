@@ -4,6 +4,12 @@ import glob
 import re
 
 # ----- input functions -----
+def get_candidate_alleles(patient_name):
+    if config['patient_info']['candidate_alleles'] is None:
+        return f"fillout/input/{patient_name}.snv_union.for_genotyping.vcf.gz"
+    else:
+        return config['patient_info']['candidate_alleles']
+
 def get_individual_sc_bam(wildcards):
     # get one single cell's bam file
     return f"{wildcards.sample_name}/1-sc_bams/{wildcards.sample_name}_{wildcards.cell_num_index}.bam"
@@ -33,18 +39,5 @@ def get_sc_mpileup_DP(wildcards):
 # # ===== target ======
 # rule patient_all_outputs:
 #     input:
-#         # "input/candidate_alleles.multiallelic.for_py.csv"
-#         expand(
-#             "fillout/{sample_name}/{sample_name}.mpileup.DP.merged.csv",
-#             sample_name=sample_names
-#         ),
-#         # merged_mpileup_vcf = expand(
-#         #     "fillout/{sample_name}/combined_vcf/{sample_name}-genotyped_combined.vcf.gz",
-#         #     sample_name = sample_names,
-#         # ),
-#         # merged_mpileup_vcf_AD_py = expand(
-#         #     "fillout/{sample_name}/{sample_name}-genotyped_combined_AD_for_py.txt",
-#         #     sample_name = sample_names
-#         # ),
-# # ===================
+#         patient_wide_workflow_outputs,
 
