@@ -1,58 +1,57 @@
 # input variables for running the custom SCVarCall pipeline
 
-top_dir: /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom
-scripts_dir: /home/zhangh5/work/Tapestri_batch1/tap_custom_SNAKEMAKE/workflow/scripts
+top_dir: /data/iacobuzc/haochen/Tapestri_batch2/pipeline_results
+scripts_dir: /data/iacobuzc/haochen/Tapestri_project/TapVarCallSmk/workflow/scripts
 
 # ----- working directory info -----
 working_dir: "default" # <------- if not default, will be set under {top_dir}
 
-# ----- sample info -----
+# ----- patient info -----
+patient_info:
+    patient_name: "RSX640"
+    sample_names: ["RSX640_N"]
+
 sample_info:
-    # cohort_name: 'RA17_22_hg19-ucsc'
-    # # sample_names: ['RA17_22-33_2']
-    # sample_names: ['RA17_22-33_2', 'RA17_22-35_1', 'RA17_22-39_6', 'RA17_22-42_2', 
-    # 'RA17_22-04_1', 'RA17_22-06_2', 'RA17_22-11_1', 'RA17_22-27_2', 'RA17_22-32_1']
-
-    # cohort_name: Caitlin
-    # sample_names: ['M04-1', 'M04-3', 'M07-3'] 
-    
-    # cohort_name: RA15_06
-    # # sample_names: ['RA15_06-3_1', 'RA15_06-10_1_3rd', 'RA15_06-14_1']
-    # sample_names: ['RA15_06-13_4']
-
-    # cohort_name: RA15_16
-    # sample_names: ['RA15_16-15_3', 'RA15_16-32_4', ]
-    
-    # cohort_name: RA16_08
-    # sample_names: ['RA16_08-08_2', 'RA16_08-08_7', 'RA16_08-08_8', 'RA16_08-10_3']
-
-    cohort_name: 'RA17_22_hg19-ucsc'
-    sample_names: ['RA17_22-32_1', 'RA17_22-33_2', 'RA17_22-35_1', 'RA17_22-39_6', 'RA17_22-42_2', 'RA17_22-04_1', 'RA17_22-06_2', 'RA17_22-11_1', 'RA17_22-27_2']
-
-# combined_cells.bam: /home/zhangh5/work/Tapestri_batch1/pipeline_results_Mutect2/autopsy/RA17_22-39_2_fresh_hg19-b37/tap_pipeline_output/results/bam/RA17_22-39_2_fresh_hg19-b37.tube1.cells.bam
+    sample_bams:
+        RSX640_N: /data/iacobuzc/haochen/Tapestri_batch2/pipeline_results/RSX640/RSX640_N/tap_pipeline_output/results/bam/RSX640_N.tube1.cells.bam
+    sample_rc_tsvs:
+        RSX640_N: /data/iacobuzc/haochen/Tapestri_batch2/pipeline_results/RSX640/RSX640_N/tap_pipeline_output/results/tsv/RSX640_N.tube1.barcode.cell.distribution.tsv
+    sample_barcode_maps:
 
 # ----- reference files -----
 reference_info:
-    reference_genome: /home/zhangh5/work/commons/Tapestri_ref/hg19-ucsc/ucsc_hg19.fa
+    reference_genome: /data/iacobuzc/haochen/Tapestri_project/tapestri_pipeline_v2refs/hg19/ucsc_hg19.fa
     genome_version: hg19-ucsc
-    panel_insert_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.bed # <------ @HZ 04/28/2022 This is the insert.bed
-    panel_insert_file_UCSC: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.bed
-    panel_amplicon_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.amplicons.bed
+    panel_insert_file: /data/iacobuzc/haochen/Tapestri_project/panels/Tapestri-Designer-results-3359/3359.bed # <------ @HZ 04/28/2022 This is the insert.bed
+    panel_insert_file_UCSC: /data/iacobuzc/haochen/Tapestri_project/panels/Tapestri-Designer-results-3359/3359.bed
+    panel_amplicon_file: /data/iacobuzc/haochen/Tapestri_project/panels/Tapestri-Designer-results-3359/3359.amplicons
     panel_version: iacobuzio3359
 
+single_sample:
+    run: True
+    1_split_sc_bams: True
+    2_sc_mutect2_call: True
+    3_filter_merge_sc_m2_call: True
+    4_sc_mpileup: True
+    5_write_h5: True
+
+patient_wide:
+    run: False
+    1_get_candidate_alleles: True
+    2_sc_mpileup: True
+    3_write_h5: True
 
 # ----- tool parameters -----
-
 mutect2:
     # note, all supplementary database VCF files must be indexed, with .idx prefix
-    germline_resource: /home/zhangh5/work/commons/Broad-somatic-b37/af-only-gnomad.raw.sites.b37.vcf.gz
+    # germline_resource: /home/zhangh5/work/commons/Broad-somatic-b37/af-only-gnomad.raw.sites.b37.vcf.gz
     mrpas: 0
     filterm2_ops:
         min-allele-fraction: 0.2
         unique-alt-read-count: 2
 
 bcftools:
-    BCFTOOLS_EXEC: /home/zhangh5/work/Tapestri_project/tap_custom_SNAKEMAKE/resources/bcftools-1.15.1/bcftools
+    BCFTOOLS_EXEC: /data/iacobuzc/haochen/Tapestri_project/TapVarCallSmk/resources/bcftools-1.15.1/bcftools
     # note the single quotation mark and the double quotation mark are seemingly not interchangeable, based on bcftools' doc
     pass1_sc_vcf_filters: ['FILTER!~"base_qual"', 'FILTER!~"low_allele_frac"', 'FILTER!~"weak_evidence"', 'FILTER!~"slippage"', 'FILTER!~"multiallelic"', 'FILTER!~"clustered_events"', 'FMT/DP>4', 'AF>0.2']
     # because sc-vcfs are normed before filtered, he multiallelic filter should do nothing
@@ -60,9 +59,6 @@ bcftools:
     # pass2_sc_vcf_filters: ['FMT/DP>4'] # obsolete
     # pass2_merged_vcf_filters: [''] # obsolete
 
-CRAVAT:
-    username: zhangh5@mskcc.org
-    password: Hfhd68MdTtHn5UE
-    annotators: ["clinvar", "gnomad3", "chasmplus", 
-    "chasmplus_PAAD","civic","cosmic","dbsnp","dbsnp_common","clinvar","gnomad3",'thousandgenomes',
-     'go','ndex']
+prev_filter_h5:
+    mut_prev_threshold: 0.005
+    bq_prev_threshold: 0.005

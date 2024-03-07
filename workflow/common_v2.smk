@@ -8,7 +8,6 @@ import logging
 import shutil, os
 from datetime import datetime
 import pytz as tz
-from snakemake import load_configfile
 from pathlib import Path
 import pysam
 import pandas as pd

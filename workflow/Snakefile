@@ -1,7 +1,7 @@
 # @HZ 10/01/2022:
 # common v2:
 # read config file, get patient&sample info 
-include: "/home/zhangh5/work/Tapestri_project/TapVarCallSmk/workflow/common_v2.smk"
+include: "common_v2.smk"
 
 workdir: working_dir 
 
