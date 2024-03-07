@@ -1,0 +1,70 @@
+# input variables for running the custom SCVarCall pipeline
+top_dir: /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom
+scripts_dir: /home/zhangh5/work/Tapestri_project/TapVarCallSmk/workflow/scripts # <--- Static in the TapVarCallSmk directory. Do not change.
+
+# ----- working directory info -----
+working_dir: "default" # <------- if not default, will be set under {top_dir}
+
+# ===== for patient-wide SNV genotyping =====
+patient_info:
+    patient_name: M04
+    sample_names: ["M04-1", "M04-2", "M04-3"]
+    candidate_alleles:
+
+# ===== for single-sample de-novo SNV calling =====
+sample_info:
+    sample_bams:
+        M04-1: /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/M04/M04-1/tap_pipeline_output/results/bam/M04-1.tube1.cells.bam
+        M04-2: /home/zhangh5/work/Tapestri_batch2/pipeline_results_default/July_2023_followup/Sample_M04-2_IGO_12742_W_2/results/bam/Sample_M04-2_IGO_12742_W_2.tube1.cells.bam
+        M04-3: /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/M04/M04-3/tap_pipeline_output/results/bam/M04-3.tube1.cells.bam
+    sample_barcode_maps:
+    sample_rc_tsvs:
+        M04-1: /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/M04/M04-1/tap_pipeline_output/results/tsv/M04-1.tube1.barcode.cell.distribution.tsv
+        M04-2: /home/zhangh5/work/Tapestri_batch2/pipeline_results_default/July_2023_followup/Sample_M04-2_IGO_12742_W_2/results/tsv/Sample_M04-2_IGO_12742_W_2.tube1.barcode.cell.distribution.tsv
+        M04-3: /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/M04/M04-3/tap_pipeline_output/results/tsv/M04-3.tube1.barcode.cell.distribution.tsv
+
+# ----- pipeline info -----
+single_sample:
+    run: False
+    1_split_sc_bams: True
+    2_sc_mutect2_call: True
+    3_filter_merge_sc_m2_call: True
+    4_sc_mpileup: True
+    5_write_h5: True
+patient_wide:
+    run: True
+    1_get_candidate_alleles: False
+    2_sc_mpileup: False
+    3_write_h5: True
+
+# ----- reference files -----
+reference_info:
+    reference_genome: /home/zhangh5/work/commons/Tapestri_ref/hg19-ucsc/ucsc_hg19.fa
+    genome_version: hg19-ucsc
+    panel_insert_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.bed # <------ @HZ 04/28/2022 This is the insert.bed
+    panel_insert_file_UCSC: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.bed
+    panel_amplicon_file: /home/zhangh5/work/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.amplicons.bed
+    panel_version: iacobuzio3359
+
+
+# ----- tool parameters -----
+mutect2:
+    # note, all supplementary database VCF files must be indexed, with .idx prefix
+    germline_resource: /home/zhangh5/work/commons/Broad-somatic-b37/af-only-gnomad.raw.sites.b37.vcf.gz
+    mrpas: 0
+    filterm2_ops:
+        min-allele-fraction: 0.2
+        unique-alt-read-count: 2
+
+bcftools:
+    BCFTOOLS_EXEC: /home/zhangh5/work/Tapestri_project/TapVarCallSmk/resources/bcftools-1.15.1/bcftools
+    # note the single quotation mark and the double quotation mark are seemingly not interchangeable, based on bcftools' doc
+    pass1_sc_vcf_filters: ['FILTER!~"base_qual"', 'FILTER!~"low_allele_frac"', 'FILTER!~"weak_evidence"', 'FILTER!~"slippage"', 'FILTER!~"multiallelic"', 'FILTER!~"clustered_events"', 'FMT/DP>4', 'AF>0.2']
+    pass1_merged_vcf_filters: ['N_PASS(GT!="mis") > 2'] # a variant needs to be individually called in at least 3 cells
+    # pass2_sc_vcf_filters: ['FMT/DP>4'] # obsolete
+    # pass2_merged_vcf_filters: [''] # obsolete
+
+# ----- step5 write_h5 -----
+sample_step5_prev_filter_h5:
+    mut_prev_threshold: 0.005
+    bq_prev_threshold: 0.005
