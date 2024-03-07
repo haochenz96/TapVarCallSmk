@@ -5,7 +5,9 @@ from pathlib import Path
 import glob
 import logging
 import re
+from tea.format import CONDENSED_SNV_FORMAT, check_matrix_format
 
+# from IPython import embed
 
 def main(args):
 
@@ -57,9 +59,17 @@ def main(args):
     ))
     merged_sc_AD_df = pd.concat(sc_AD_dfs_map, axis=1)
     merged_sc_AD_df.columns = sc_AD_dfs_map.keys()
-    ordered_sc_idx = merged_sc_AD_df.columns.sort_values() # order the single cell indices !!!!
+    ordered_sc_idx = merged_sc_AD_df.columns.sort_values() # order the single cell indices !!!! Needed for H5 creation
     ordered_var = merged_sc_AD_df.index.sort_values() # order the variants !!!!
     merged_sc_AD_df = merged_sc_AD_df.loc[ordered_var, ordered_sc_idx]
+
+    # in case the BAMs were aligned to b37, add `chr` to the index
+    if not check_matrix_format(merged_sc_AD_df, CONDENSED_SNV_FORMAT):
+        logging.warning("[WARNING] --- the index of the SNV df is not in the correct condensed SNV format chr[chr_number]:[pos]:[ref]/[alt]. Trying to fix by appending `chr` to it...")
+        merged_sc_AD_df.index = 'chr' + merged_sc_AD_df.index.astype(str)
+        if not check_matrix_format(merged_sc_AD_df, CONDENSED_SNV_FORMAT):
+            print(f"index is currently in the format of: {merged_sc_AD_df.index[2]}")
+            raise ValueError(f'[ERROR] --- the index cannot be fixed into the right format! Exiting')
 
     # get the DP layer
     sc_DP_cell_ids = [re.findall(r'cell_\d+', f.name)[0] for f in sc_DP_fs]
@@ -71,10 +81,10 @@ def main(args):
     # # ^^^^^^^^ this is problematic for indels with len(REF) != 1
     
     # set index from CHROM:POS:REF to CHROM:POS
-    # sc_DP_dfs_list = [
-    #     pd.DataFrame(data = df_i.values, index = df_i.index.str.split(':').str[:2].str.join(':'), columns = ['DP'])
-    #     for df_i in sc_DP_dfs_list
-    # ]
+    sc_DP_dfs_list = [
+        pd.DataFrame(data = df_i.values, index = df_i.index.str.split(':').str[:2].str.join(':'), columns = ['DP'])
+        for df_i in sc_DP_dfs_list
+    ]
     # aggregate duplicated positions with the `max` function
     sc_DP_dfs_list = [
         df_i.fillna(0).groupby(level=0).agg('max')
@@ -91,6 +101,14 @@ def main(args):
     ordered_var = merged_sc_DP_df.index.sort_values() # order the variants !!!!
     merged_sc_DP_df = merged_sc_DP_df.loc[ordered_var, ordered_sc_idx]
 
+    # in case the BAMs were aligned to b37, add `chr` to the index
+    if not check_matrix_format(merged_sc_DP_df, 'chr.*:(\d+)$'):
+        logging.warning("[WARNING] --- the index of the SNV df is not in the correct condensed SNV format chr[chr_number]:[pos]:[ref]/[alt]. Trying to fix by appending `chr` to it...")
+        merged_sc_DP_df.index = 'chr' + merged_sc_DP_df.index.astype(str)
+        if not check_matrix_format(merged_sc_DP_df, 'chr.*:(\d+)$'):
+            print(f"index is currently in the format of: {merged_sc_AD_df.index[2]}")
+            raise ValueError(f'[ERROR] --- the index cannot be fixed into the right format! Exiting')
+
     # ----- 2. populate the output dfs ----- #
     filled_DP_df = alleles_df.apply(
         lambda row: merged_sc_DP_df.loc[row['pos'], :] 
@@ -98,6 +116,8 @@ def main(args):
         else pd.Series([0]*len(sc_DP_dfs_map), index = merged_sc_DP_df.columns),
         axis=1
         )
+
+    # embed()
     # # for indels where the ref allele is not one single locus, fill in their DP in cells where the mutant allele is not present
     # filled_DP_df.loc[(alleles_df['ref'].str.len() != 1), :].loc[
     #     np.isnan(filled_DP_df)

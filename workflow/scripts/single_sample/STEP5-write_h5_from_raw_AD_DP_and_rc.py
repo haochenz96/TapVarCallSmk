@@ -107,9 +107,10 @@ def main(args):
     DP_merged_df = pd.read_csv(args.DP_merged_df, index_col=0)
     AD_merged_df = AD_merged_df[~AD_merged_df.index.duplicated()]
     DP_merged_df = DP_merged_df[~DP_merged_df.index.duplicated()]
-    # sanity check: the single cell indices and variant order need to be uinified
+    # sanity check: the AD and DP layers' single cell indices and SNV orders need to be uinified
     # assert AD_merged_df.shape == DP_merged_df.shape, f"AD and DP layers have different shapes; AD: {AD_merged_df.shape}, DP: {DP_merged_df.shape}"
     assert np.all(AD_merged_df.index == DP_merged_df.index), f"AD and DP layers have different indices; AD: {AD_merged_df.index}, DP: {DP_merged_df.index}"
+    assert np.all(AD_merged_df.columns == DP_merged_df.columns), f"AD and DP layers have different columns; AD: {AD_merged_df.columns}, DP: {DP_merged_df.columns}"
     panel_insert_file = args.panel_insert_file # this need to be UCSC format ('chr1' instead of '1')
 
     # --- inputs for creating the CNV assay
@@ -171,10 +172,16 @@ def main(args):
     if args.read_counts_tsv is not None:
         rc_df = pd.read_csv(read_counts_tsv, sep='\t', index_col=0)
         # rename cell barcode --> cell numerical index
+        # make sure every barcode in barcode_num_map is present in the read counts tsv
+        assert set(barcode_num_map.keys()).issubset(set(rc_df.index)), f"not all barcodes in barcode_num_map are present in the read counts tsv!"
+        # map barcodes to numerical indices, eliminate barcodes that are not in barcode_num_map
         rc_df.index = rc_df.index.map(barcode_num_map)
+        rc_df = rc_df.loc[rc_df.index.notnull()]
+        
         rc_df.sort_index(inplace=True)
-        # save renamed matrix to output
-        rc_df.to_csv(read_counts_tsv_renamed, sep='\t')
+        if read_counts_tsv_renamed is not None:
+            # save renamed matrix to output
+            rc_df.to_csv(read_counts_tsv_renamed, sep='\t')
 
         cnv = Assay.create(DNA_READ_COUNTS_ASSAY)
         cnv.add_layer("read_counts", rc_df.values)

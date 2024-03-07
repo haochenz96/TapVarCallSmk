@@ -1,4 +1,4 @@
-rule gather_individual_snv_lists:
+rule patient_step1_gather_individual_snv_lists:
     input:
         sample_snv_lists = expand(
             "{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.prev_filtered.csv", sample_name = config['patient_info']['sample_names']
@@ -17,7 +17,7 @@ rule gather_individual_snv_lists:
             > {log} 2>&1
         """
 
-rule generate_candidate_alleles_for_bcf:
+rule patient_step1_generate_candidate_alleles_for_bcf:
     # generate a candidate allele from Q_VCF
     # @HZ 08/28/2022: need to merge multiallelic sites for the next step (mpileup+call) to work
     input:

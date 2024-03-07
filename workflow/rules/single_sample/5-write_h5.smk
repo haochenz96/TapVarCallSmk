@@ -34,7 +34,7 @@ rule step5_write_h5_from_mpileup_raw_data_and_rc:
     params:
         output_dir = "{sample_name}/OUTPUTS_from_mpileup",
         # write_h5_script = config['python_scripts']['step5_write_h5_from_mpileup_raw_data'],
-        write_h5_script = os.path.join(scripts_dir, "single_sample/STEP5-write_h5_from_raw_data.py")
+        write_h5_script = os.path.join(scripts_dir, "single_sample/STEP5-write_h5_from_raw_AD_DP_and_rc.py")
     log: 
         "{sample_name}/logs/{sample_name}.STEP5.log",
     conda:
@@ -67,14 +67,14 @@ rule step5_prev_filter_h5:
         input_h5 = "{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.h5",
         bq_info_csv = "{sample_name}/3-bcf_filter/merged_bq_info/{sample_name}-bq_merged.sc_prev.csv",
     output:
-        output_vcf = "{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.prev_filtered.vcf",
+        output_csv = "{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.prev_filtered.csv",
     params:
-        mut_prev_threshold = config['prev_filter_h5']['mut_prev_threshold'],
-        bq_prev_threshold = config['prev_filter_h5']['bq_prev_threshold'],
+        mut_prev_threshold = config['sample_step5_prev_filter_h5']['mut_prev_threshold'],
+        bq_prev_threshold = config['sample_step5_prev_filter_h5']['bq_prev_threshold'],
         # filter_h5_script = config['python_scripts']['prev_filter_h5'],
         filter_h5_script = os.path.join(scripts_dir, "single_sample/STEP5-prev_filter_h5.py")
     log: 
-        std = "{sample_name}/logs/{sample_name}.STEP5.log",
+        "{sample_name}/logs/{sample_name}.STEP5.log",
     conda:
         "../../envs/mosaic-custom.yaml"
     threads: 4
@@ -84,10 +84,10 @@ rule step5_prev_filter_h5:
         time_min = 59
     shell:
         """
-        python /home/zhangh5/work/Tapestri_project/TapVarCallSmk/workflow/scripts/STEP5-prev_filter_h5.py \
+        python {params.filter_h5_script} \
             --input_h5 {input.input_h5} \
             --bq_info_csv {input.bq_info_csv} \
-            --output_vcf {output.output_vcf} \
+            --output_csv {output.output_csv} \
             > {log} 2>&1
         """
 

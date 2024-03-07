@@ -33,7 +33,10 @@ def main(args):
     mut_prev_df = sample_obj.dna.get_attribute('mut_filtered', constraint='row').sum(axis=0)
     bq_prev_df = pd.read_csv(args.bq_info_csv, index_col=0, header=None, names=['bq_sc_prev'])
     if not check_matrix_format(bq_prev_df, CONDENSED_SNV_FORMAT):
-        exit(1, "ERROR: bq_info_csv is not in the correct format.")
+        # add 'chr' to the index
+        bq_prev_df.index = 'chr' + bq_prev_df.index.astype(str)
+        if not check_matrix_format(bq_prev_df, CONDENSED_SNV_FORMAT):
+            exit(1, "ERROR: bq_info_csv is not in the correct format.")
     
     mut_prev_df.name='mut_sc_prev'
     snv_prev_df = mut_prev_df.to_frame()
@@ -63,9 +66,9 @@ def main(args):
     logging.info(f"[STEP5-prev_filter] Number of SNVs left after filtering: {len(voi)}")
 
     # ----- write output list file -----
-    if args.output_list_f is not None:
-        pd.DataFrame(index=voi).to_csv(args.output_list_f, header=False, index=True)
-        logging.info(f"[STEP5-prev_filter] Written to output list file: {args.output_list_f}")
+    if args.output_csv is not None:
+        pd.DataFrame(index=voi).to_csv(args.output_csv, header=False, index=True)
+        logging.info(f"[STEP5-prev_filter] Written to output list file: {args.output_csv}")
 
     # ----- write output H5 -----
     if args.output_h5 is not None:
@@ -109,7 +112,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_h5', type=str, help='path to write output H5.', required=True)
     parser.add_argument('--bq_info_csv', type=str, help='base-quality info output by the custom pipeline.', required=True)
-    parser.add_argument('--output_list_f', type=str, help='path to write output list of SNVs.', default=None)
+    parser.add_argument('--output_csv', type=str, help='path to write output list of SNVs, in CSV format.', default=None)
     parser.add_argument('--output_vcf', type=str, help='path to write output vcf.', default=None)
     parser.add_argument('--output_h5', type=str, help='path to write output vcf.', default=None)
     parser.add_argument('--mut_prev_threshold', type=float, help='minimum mutation prevalence threshold.', default=0.005)

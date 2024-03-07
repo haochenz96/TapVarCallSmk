@@ -146,6 +146,8 @@ rule step4_merge_raw_layers:
         MERGE_SCRIPT = os.path.join(scripts_dir, "single_sample/STEP4-merge_sc_AD_DP.py")
     log:
         "{sample_name}/logs/{sample_name}.STEP4-mpileup_genotype.log",
+    conda:
+        "../../envs/mosaic-custom.yaml"
     threads: lambda wildcards, attempt: attempt * 4,
     retries: 2,
     resources:

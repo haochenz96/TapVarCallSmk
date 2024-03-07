@@ -5,43 +5,123 @@ include: "/home/zhangh5/work/Tapestri_project/TapVarCallSmk/workflow/common_v2.s
 
 workdir: working_dir 
 
+# ===== workflow info =====
+# ----- single_sample workflow ------
+single_sample_outputs = []
+if config['single_sample']['run']:
+    include: "single_sample_main.smk"
+    single_sample_steps = config['single_sample']
+    if single_sample_steps['1_split_sc_bams']:
+        include: "rules/single_sample/1-split_sc_bams.smk"
+        single_sample_outputs.append(
+            get_step1_sc_bams(sample_names, sample_barcode_maps),
+        )
+    if single_sample_steps['2_sc_mutect2_call']:
+        include: "rules/single_sample/2-sc_mutect2_call.smk"
+        single_sample_outputs.append(
+            get_step2_filter_added_mutect2_vcfs(sample_names, sample_barcode_maps),
+        )
+    if single_sample_steps['3_filter_merge_sc_m2_call']:
+        include: "rules/single_sample/3-filter_merge_sc_m2_call.smk"
+        for sample_i in sample_names:
+            single_sample_outputs.append([
+                f"{sample_i}/3-bcf_filter/combined_vcf/{sample_i}-combined_VCF_filter_v3.prev_filtered.vcf.gz",
+                f"{sample_i}/3-bcf_filter/merged_bq_info/{sample_i}-bq_merged.sc_prev.csv"
+            ])
+    if single_sample_steps['4_sc_mpileup']:
+        include: "rules/single_sample/4-sc_mpileup.smk"
+        for sample_i in sample_names:
+            single_sample_outputs.append(
+                f"{sample_i}/4-bcf_genotyping/{sample_i}.mpileup.DP.merged.csv"
+            )
+    if single_sample_steps['5_write_h5']:
+        include: "rules/single_sample/5-write_h5.smk"
+        for sample_i in sample_names:
+            single_sample_outputs.append([
+                f"{sample_i}/OUTPUTS_from_mpileup/{sample_i}.mpileup.h5",
+                f"{sample_i}/OUTPUTS_from_mpileup/{sample_i}.mpileup.prev_filtered.csv",
+            ])
+else:
+    print("[INFO] Skipping single_sample VarCall workflow...")
+
+# ----- patient_wide workflow ------
+patient_wide_workflow_outputs = []
+if config['patient_wide']['run']:
+    include: "patient_wide_main.smk"
+    patient_wide_steps = config['patient_wide']
+    if patient_wide_steps['1_get_candidate_alleles']:
+        if config['patient_info']['candidate_alleles'] is None:
+            include: "rules/patient_wide/1-get_candidate_alleles.smk"
+            patient_wide_workflow_outputs.append(
+                f"fillout/input/{patient_name}.snv_union.for_genotyping.vcf.gz",
+            )
+        else:
+            print(f"""[INFO] Using provided candidate_alleles file: 
+            --- {config['patient_info']['candidate_alleles']}""")
+    if patient_wide_steps['2_sc_mpileup']:
+        include: "rules/patient_wide/2-sc_mpileup.smk"
+        for sample_i in sample_names:
+            patient_wide_workflow_outputs.append(
+                f"fillout/{sample_i}/{sample_i}.mpileup.DP.merged.csv",
+            )
+    if patient_wide_steps['3_write_h5']:
+        include: "rules/patient_wide/3-write_h5.smk"
+        for sample_i in sample_names:
+            patient_wide_workflow_outputs.append(
+                f"fillout/{sample_i}/{sample_i}.mpileup.h5",
+            )
+        patient_wide_workflow_outputs.append(
+            f"fillout/{patient_name}.patient_wide.genotyped.h5"
+        )
+else:
+    print("[INFO] Skipping patient-wide VarCall workflow...")
+
+all_outputs = single_sample_outputs + patient_wide_workflow_outputs
+
 rule all:
     input:
-        # ===== single_sample workflow =====
-        # ---- step-1 output:
-        # get_step1_sc_bams(sample_names, sample_barcode_maps),
-        # # ---- step-2 output:
-        # get_step2_filter_added_mutect2_vcfs(sample_names, sample_barcode_maps),
-        # # #get_step2_strelka2_vcfs(sample_names, sample_barcode_maps),
-        # ---- step-3 output:
-        # expand("{sample_name}/3-bcf_filter/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz", sample_name = sample_names),
-        expand("{sample_name}/3-bcf_filter/merged_bq_info/{sample_name}-bq_merged.sc_prev.csv", sample_name = sample_names),
-        # ---- step-4 output:
-        # (A) bcftools mpileup:
-        # expand("{sample_name}/4-bcf_genotyping/{sample_name}.mpileup.DP.merged.csv", sample_name = sample_names),
-        # ---------------------
-        # (B) Mutect2 force call:
-        # expand("{sample_name}/4-sc_mutect_f_call/{sample_name}-f_q_intersected.vcf.gz.stats", sample_name = sample_names),
-        # # ---- step-5 output:
-        # (A) bcftools mpileup:
-        expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.h5",sample_name = sample_names),
-        expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.prev_filtered.csv",sample_name = sample_names),
-        # # (B) Mutect2 force call:
-        # expand("{sample_name}/OUTPUTS_from_m2_f/{sample_name}_DNA_CNV_m2_f.h5", sample_name = sample_names),
+        all_outputs,
 
-        # ===== patient_wide workflow =====
-        expand(
-            "fillout/input/{patient_name}.snv_union.for_genotyping.vcf.gz",
-            patient_name = patient_name
-        ),
-        expand(
-            "fillout/{sample_name}/{sample_name}.mpileup.DP.merged.csv",
-            sample_name=sample_names
-        ),
-        expand(
-            "fillout/{sample_name}/{sample_name}.mpileup.h5",
-            sample_name=sample_names
-        ),
-        expand("fillout/{patient_name}.patient_wide.genotyped.h5", patient_name = patient_name),
+
+# @HZ 07/16/2023:
+# these are for manual tuning of outputs
+# rule all:
+#     input:
+#         # ===== single_sample workflow =====
+#         # ---- step-1 output:
+#         # get_step1_sc_bams(sample_names, sample_barcode_maps),
+#         # # ---- step-2 output:
+#         # get_step2_filter_added_mutect2_vcfs(sample_names, sample_barcode_maps),
+#         # # #get_step2_strelka2_vcfs(sample_names, sample_barcode_maps),
+#         # ---- step-3 output:
+#         # expand("{sample_name}/3-bcf_filter/combined_vcf/{sample_name}-combined_VCF_filter_v3.prev_filtered.vcf.gz", sample_name = sample_names),
+#         expand("{sample_name}/3-bcf_filter/merged_bq_info/{sample_name}-bq_merged.sc_prev.csv", sample_name = sample_names),
+#         # ---- step-4 output:
+#         # (A) bcftools mpileup:
+#         # expand("{sample_name}/4-bcf_genotyping/{sample_name}.mpileup.DP.merged.csv", sample_name = sample_names),
+#         # ---------------------
+#         # (B) Mutect2 force call:
+#         # expand("{sample_name}/4-sc_mutect_f_call/{sample_name}-f_q_intersected.vcf.gz.stats", sample_name = sample_names),
+#         # # ---- step-5 output:
+#         # (A) bcftools mpileup:
+#         expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.h5",sample_name = sample_names),
+#         expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.prev_filtered.csv",sample_name = sample_names),
+#         # # (B) Mutect2 force call:
+#         # expand("{sample_name}/OUTPUTS_from_m2_f/{sample_name}_DNA_CNV_m2_f.h5", sample_name = sample_names),
+
+#         # # ===== patient_wide workflow =====
+#         # expand(
+#         #     "fillout/input/{patient_name}.snv_union.for_genotyping.vcf.gz",
+#         #     patient_name = patient_name
+#         # ),
+#         # expand(
+#         #     "fillout/{sample_name}/{sample_name}.mpileup.DP.merged.csv",
+#         #     sample_name=sample_names
+#         # ),
+#         # expand(
+#         #     "fillout/{sample_name}/{sample_name}.mpileup.h5",
+#         #     sample_name=sample_names
+#         # ),
+#         # expand("fillout/{patient_name}.patient_wide.genotyped.h5", patient_name = patient_name),
 
         
