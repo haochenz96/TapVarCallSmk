@@ -1,7 +1,7 @@
 # @HZ 10/01/2022:
 # common v2:
 # read config file, get patient&sample info 
-include: "/home/zhangh5/work/Tapestri_project/TapVarCallSmk/workflow/common_v2.smk"
+include: "common_v2.smk"
 
 workdir: working_dir 
 
@@ -25,23 +25,23 @@ rule all:
         # # ---- step-5 output:
         # (A) bcftools mpileup:
         expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.h5",sample_name = sample_names),
-        expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.prev_filtered.csv",sample_name = sample_names),
+        # expand("{sample_name}/OUTPUTS_from_mpileup/{sample_name}.mpileup.prev_filtered.csv",sample_name = sample_names),
         # # (B) Mutect2 force call:
         # expand("{sample_name}/OUTPUTS_from_m2_f/{sample_name}_DNA_CNV_m2_f.h5", sample_name = sample_names),
 
-        # ===== patient_wide workflow =====
-        expand(
-            "fillout/input/{patient_name}.snv_union.for_genotyping.vcf.gz",
-            patient_name = patient_name
-        ),
-        expand(
-            "fillout/{sample_name}/{sample_name}.mpileup.DP.merged.csv",
-            sample_name=sample_names
-        ),
-        expand(
-            "fillout/{sample_name}/{sample_name}.mpileup.h5",
-            sample_name=sample_names
-        ),
-        expand("fillout/{patient_name}.patient_wide.genotyped.h5", patient_name = patient_name),
+        # # ===== patient_wide workflow =====
+        # expand(
+        #     "fillout/input/{patient_name}.snv_union.for_genotyping.vcf.gz",
+        #     patient_name = patient_name
+        # ),
+        # expand(
+        #     "fillout/{sample_name}/{sample_name}.mpileup.DP.merged.csv",
+        #     sample_name=sample_names
+        # ),
+        # expand(
+        #     "fillout/{sample_name}/{sample_name}.mpileup.h5",
+        #     sample_name=sample_names
+        # ),
+        # expand("fillout/{patient_name}.patient_wide.genotyped.h5", patient_name = patient_name),
 
         

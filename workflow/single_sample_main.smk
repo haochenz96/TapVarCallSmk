@@ -10,8 +10,8 @@ def parse_for_shell_args(input_dict):
 
 # ----- get individual samples' inputs (BAMs, barcode maps, read counts) -----
 sample_names = config['patient_info']['sample_names']
-assert sample_names == config['sample_info']['sample_bams'].keys(), "Must specify input BAMs for each sample in the config file."
-assert sample_names == config['sample_info']['sample_rc_tsvs'].keys(), "Must specify input read count TSVs for each sample in the config file."
+assert sample_names == list(config['sample_info']['sample_bams'].keys()), "Must specify input BAMs for each sample in the config file."
+assert sample_names == list(config['sample_info']['sample_rc_tsvs'].keys()), "Must specify input read count TSVs for each sample in the config file."
 
 for sample_i in sample_names:
     (working_dir / sample_i / 'tap_pipeline_output' / 'results' / 'bam').mkdir(parents=True, exist_ok=True)

@@ -8,7 +8,6 @@ import logging
 import shutil
 from datetime import datetime
 import pytz as tz
-from snakemake import load_configfile
 from pathlib import Path
 import pysam
 import pandas as pd
@@ -143,15 +142,15 @@ if config['single_sample']['run']:
     single_sample_steps = config['single_sample']
     single_sample_outputs = []
     if single_sample_steps['1_split_sc_bams']:
-        include: "rules/single-sample/1-split_sc_bams.smk"
+        include: "rules/single_sample/1-split_sc_bams.smk"
     if single_sample_steps['2_sc_mutect2_call']:
-        include: "rules/single-sample/2-single-cell_mutect2_call.smk"
+        include: "rules/single_sample/2-sc_mutect2_call.smk"
     if single_sample_steps['3_filter_merge_sc_m2_call']:
-        include: "rules/single-sample/3-filter_and_merge_sc_m2_call.smk"
+        include: "rules/single_sample/3-filter_merge_sc_m2_call.smk"
     if single_sample_steps['4_sc_mpileup']:
-        include: "rules/single-sample/4-single-cell_mpileup.smk"
+        include: "rules/single_sample/4-sc_mpileup.smk"
     if single_sample_steps['5_write_h5']:
-        include: "rules/single-sample/5-generate_outputs.smk"
+        include: "rules/single_sample/5-write_h5.smk"
 else:
     print("[INFO] Skipping single-sample VarCall workflow...")
 
