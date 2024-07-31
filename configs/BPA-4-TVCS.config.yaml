@@ -1,0 +1,68 @@
+# input variables for running the custom SCVarCall pipeline
+
+top_dir: /juno/work/iacobuzc/haochen/Tapestri_batch2/pipeline_results_custom
+scripts_dir: /juno/work/iacobuzc/haochen/Tapestri_project/TapVarCallSmk/workflow/scripts # <--- Static in the TapVarCallSmk directory. Do not change.
+
+# ----- working directory info -----
+working_dir: "default" # <------- if not default, will be set under {top_dir}
+
+# ----- patient info -----
+patient_info:
+    patient_name: "BPA-4"
+    sample_names: ["BPA-4-RSX"]
+    candidate_alleles:
+
+# ===== for single-sample de-novo SNV calling =====
+sample_info:
+    sample_bams:
+        BPA-4-RSX: /juno/work/iacobuzc/haochen/Tapestri_batch2/pipeline_results_custom/BPA-4/BPA-4-RSX/tap_pipeline_output/results/bam/BPA-4-RSX.tube1.cells.bam
+    sample_rc_tsvs:
+        BPA-4-RSX: /juno/work/iacobuzc/haochen/Tapestri_batch2/pipeline_results_custom/BPA-4/BPA-4-RSX/tap_pipeline_output/results/tsv/BPA-4-RSX.tube1.barcode.cell.distribution.tsv
+    sample_barcode_maps:
+
+# ----- pipeline info -----
+single_sample:
+    run: True
+    1_split_sc_bams: True
+    2_sc_mutect2_call: True
+    3_filter_merge_sc_m2_call: True
+    4_sc_mpileup: True
+    5_write_h5: True
+
+patient_wide:
+    run: False
+    1_get_candidate_alleles: False
+    2_sc_mpileup: False
+    3_write_h5: True
+
+# ----- reference files -----
+reference_info:
+    reference_genome: /juno/work/iacobuzc/haochen/commons/Tapestri_ref/hg19-ucsc/ucsc_hg19.fa
+    genome_version: hg19-ucsc
+    panel_insert_file: /juno/work/iacobuzc/haochen/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.bed # <------ @HZ 04/28/2022 This is the insert.bed
+    panel_insert_file_UCSC: /juno/work/iacobuzc/haochen/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.bed
+    panel_amplicon_file: /juno/work/iacobuzc/haochen/Tapestri_batch2/panel_3359/panel_3359_hg19-ucsc/3359.amplicons.bed
+    panel_version: iacobuzio3359
+
+
+# ----- tool parameters -----
+mutect2:
+    # note, all supplementary database VCF files must be indexed, with .idx prefix
+    germline_resource: /juno/work/iacobuzc/haochen/commons/Broad-somatic-b37/af-only-gnomad.raw.sites.b37.vcf.gz
+    mrpas: 0
+    filterm2_ops:
+        min-allele-fraction: 0.2
+        unique-alt-read-count: 2
+
+bcftools:
+    BCFTOOLS_EXEC: /juno/work/iacobuzc/haochen/Tapestri_project/TapVarCallSmk/resources/bcftools-1.15.1/bcftools
+    # note the single quotation mark and the double quotation mark are seemingly not interchangeable, based on bcftools' doc
+    pass1_sc_vcf_filters: ['FILTER!~"base_qual"', 'FILTER!~"low_allele_frac"', 'FILTER!~"weak_evidence"', 'FILTER!~"slippage"', 'FILTER!~"multiallelic"', 'FILTER!~"clustered_events"', 'FMT/DP>4', 'AF>0.2']
+    pass1_merged_vcf_filters: ['N_PASS(GT!="mis") > 2'] # a variant needs to be individually called in at least 3 cells
+    # pass2_sc_vcf_filters: ['FMT/DP>4'] # obsolete
+    # pass2_merged_vcf_filters: [''] # obsolete
+
+# ----- step5 write_h5 -----
+sample_step5_prev_filter_h5:
+    mut_prev_threshold: 0.005
+    bq_prev_threshold: 0.005
