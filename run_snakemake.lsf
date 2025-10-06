@@ -15,18 +15,11 @@
 # export SNAKEMAKE_OUTPUT_CACHE=/home/zhangh5/work/Tapestri_project/TapVarCallSmk/snakemake-cache/ # <--- define cache location
 export XDG_CACHE_HOME=/home/zhangh5/work/Tapestri_project/TapVarCallSmk/snakemake-cache/ # <--- define cache location
 
-cd /home/zhangh5/work/Tapestri_project/TapVarCallSmk
-
-# snakemake \
-#     --profile lsf \
-#     --conda-prefix /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/conda \
-#     --configfile configs/panel2_hg19-ucsc.yaml \
-#     --quiet rules \
-#     --unlock
+cd ./TapVarCallSmk
 
 snakemake \
     --profile lsf \
-    --conda-prefix /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/conda \
-    --configfile /home/zhangh5/work/Tapestri_batch2/pipeline_results_custom/normal_pancreas/TapVarCall-run--2023-01-20.yaml \
+    --conda-prefix ./conda \
+    --configfile ./configs/M04-pip-config-2023-09-19.yaml \
     --quiet rules \
-    -n
+    -n # <- dry run
